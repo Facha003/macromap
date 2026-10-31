@@ -35,7 +35,7 @@ import type { ParsedDish } from "../src/lib/menuParse";
 const PLACES = join(process.cwd(), "public", "places");
 const OUT = join(process.cwd(), "public", "menus");
 const UA = "MacroMapBot/0.1 (+https://github.com/Facha003/macromap; reads public menus to estimate nutrition)";
-const LIMIT = Number(process.env.MENU_CRAWL_LIMIT || 350);
+const LIMIT = Number(process.env.MENU_CRAWL_LIMIT || 600);
 const TIME_BUDGET_MS = Number(process.env.MENU_CRAWL_MINUTES || 25) * 60_000;
 const RECHECK_MS = 14 * 24 * 3600_000;
 const RECHECK_ERROR_MS = 3 * 24 * 3600_000;
