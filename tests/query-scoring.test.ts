@@ -69,3 +69,37 @@ describe("scoreMeal", () => {
     expect(Math.abs(t.proteinG * 4 + t.carbsG * 4 + t.fatG * 9 - t.kcalTarget)).toBeLessThan(10);
   });
 });
+
+describe("uncertainty-aware limits", async () => {
+  const { rangeFit } = await import("@/lib/searchCore");
+  const vals = (kmin: number, k: number, kmax: number, pmin: number, p: number, pmax: number): NutritionValues => ({
+    kcal: { min: kmin, likely: k, max: kmax },
+    protein: { min: pmin, likely: p, max: pmax },
+    carbs: { min: 0, likely: 0, max: 0 },
+    fat: { min: 0, likely: 0, max: 0 },
+    fiber: null,
+    sugar: null,
+    sodiumMg: null,
+  });
+
+  it("550–750 kcal is only 'possibly' under 650", () => {
+    const r = rangeFit(vals(550, 640, 750, 30, 35, 40), { maxKcal: 650 }, null);
+    expect(r.likelyOk).toBe(true);
+    expect(r.fit).toBe("possibly");
+    expect(r.notes[0]).toMatch(/750 kcal/);
+  });
+
+  it("25–45 g protein is only 'possibly' at least 40 g", () => {
+    const r = rangeFit(vals(400, 500, 600, 25, 41, 45), { minProtein: 40 }, null);
+    expect(r.fit).toBe("possibly");
+  });
+
+  it("a range fully inside the limits fits; a likely value outside fails", () => {
+    expect(rangeFit(vals(400, 450, 500, 42, 45, 50), { maxKcal: 650, minProtein: 40 }, null).fit).toBe("fits");
+    expect(rangeFit(vals(600, 700, 800, 30, 35, 40), { maxKcal: 650 }, null).likelyOk).toBe(false);
+  });
+
+  it("restaurant-published single values are exact", () => {
+    expect(rangeFit(vals(640, 640, 640, 41, 41, 41), { maxKcal: 650, minProtein: 40 }, null).fit).toBe("fits");
+  });
+});

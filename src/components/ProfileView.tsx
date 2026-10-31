@@ -99,7 +99,7 @@ export function ProfileView({ profile, account, system, onChanged }: { profile: 
         <label className="flex items-start justify-between gap-4">
           <span>
             <span className="block text-sm font-medium">Halal only</span>
-            <span className="block text-xs text-ink-2">Show only restaurants tagged halal or likely halal (kebab, Turkish, Middle Eastern…), and hide dishes with pork. “Likely” isn’t confirmed — always ask the restaurant.</span>
+            <span className="block text-xs text-ink-2">Show only restaurants with halal evidence — stated by the restaurant, tagged on OpenStreetMap, or marked by you — and hide dishes with pork or alcohol. Cuisine alone (e.g. Turkish) never counts unless you turn on “possibly halal” in Explore.</span>
           </span>
           <input type="checkbox" checked={halalOnly} onChange={(e) => setHalalOnly(e.target.checked)} className="mt-1 h-5 w-5 accent-[var(--ink)]" />
         </label>
@@ -158,7 +158,7 @@ export function ProfileView({ profile, account, system, onChanged }: { profile: 
           <li>Restaurants: {system.places}</li>
           <li className="flex-inline"><Sparkles size={11} className="mr-1 inline" />AI ingredient analysis: {system.ai ?? "not configured (template estimates only)"}</li>
         </ul>
-        <p>Food-composition data retrieved {fmtDate(system.foodsRetrievedAt)}. Verified values come only from restaurants. Estimates are computed from ingredients and portion ranges and always shown as ranges; AI never produces nutrient numbers itself. We don’t claim a fixed accuracy — see the validation plan in the project docs.</p>
+        <p>Food-composition data retrieved {fmtDate(system.foodsRetrievedAt)}. “Restaurant-published” values come only from restaurants themselves. Estimates are computed from ingredients and portion ranges and always shown as ranges; AI never produces nutrient numbers itself. We don’t claim a fixed accuracy — see the validation plan in the project docs.</p>
       </section>
     </div>
   );

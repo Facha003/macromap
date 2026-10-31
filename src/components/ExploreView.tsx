@@ -8,7 +8,7 @@ import { useLocation } from "@/lib/client/location";
 import { track } from "@/lib/client/loading";
 import { backend, type RestaurantHit } from "@/lib/client/backend";
 import { useHalal } from "@/lib/client/prefs";
-import { halalStatus, isHalalOption } from "@/lib/halal";
+import { halalStatus, passesHalalFilter } from "@/lib/halal";
 import { LocationGate } from "./LocationGate";
 import { cuisineLabel, HalalBadge, RestaurantCard, type RestaurantCardData } from "./RestaurantCard";
 
@@ -31,7 +31,7 @@ export function ExploreView() {
   const [filter, setFilter] = useState("");
   const [onlyWithData, setOnlyWithData] = useState(false);
   const [shown, setShown] = useState(100);
-  const { halalOnly, setHalalOnly, reports } = useHalal();
+  const { halalOnly, setHalalOnly, includePossible, setIncludePossible, reports } = useHalal();
   const [hits, setHits] = useState<RestaurantHit[] | null>(null);
   const searching = filter.trim().length >= 2;
 
@@ -82,14 +82,14 @@ export function ExploreView() {
   const statusOf = (r: { id: string; name: string; cuisines: string[]; halalTag?: string | null }) => halalStatus(r, reports[r.id]).status;
   const list = useMemo(() => {
     const rs = (data?.restaurants ?? []).filter(
-      (r) => (!onlyWithData || r.menuCount > 0) && (!halalOnly || isHalalOption(halalStatus({ ...r, halalTag: r.tags.halal }, reports[r.id]).status)),
+      (r) => (!onlyWithData || r.menuCount > 0) && (!halalOnly || passesHalalFilter(halalStatus({ ...r, halalTag: r.tags.halal }, reports[r.id]).status, includePossible)),
     );
     // Restaurants we have nutrition for first, then by distance.
     return [...rs].sort((a, b) => Number(b.menuCount > 0) - Number(a.menuCount > 0) || a.distanceM - b.distanceM);
-  }, [data, onlyWithData, halalOnly, reports]);
+  }, [data, onlyWithData, halalOnly, includePossible, reports]);
 
   function visibleHits(h: RestaurantHit[]) {
-    return halalOnly ? h.filter((x) => isHalalOption(statusOf(x))) : h;
+    return halalOnly ? h.filter((x) => passesHalalFilter(statusOf(x), includePossible)) : h;
   }
 
   if (!ready) return null;
@@ -163,9 +163,13 @@ export function ExploreView() {
       </div>
 
       {halalOnly && (
-        <p className="mb-3 rounded-xl bg-good-soft px-3 py-2 text-xs text-good">
-          Halal only: showing restaurants tagged halal, plus “likely halal” ones (kebab, Turkish, Middle Eastern…) that aren’t confirmed — always ask. Dishes with pork are hidden.
-        </p>
+        <div className="mb-3 rounded-xl bg-good-soft px-3 py-2 text-xs text-good">
+          <p>Halal only: restaurants with halal evidence — stated by the restaurant, tagged on OpenStreetMap, or marked by you. Dishes with pork or alcohol are hidden. Restaurant-level info doesn’t verify every dish — ask when ordering.</p>
+          <label className="mt-1.5 flex items-center gap-2 font-medium">
+            <input type="checkbox" checked={includePossible} onChange={(e) => setIncludePossible(e.target.checked)} className="accent-[var(--ink)]" />
+            Include possibly halal (cuisine only, unconfirmed)
+          </label>
+        </div>
       )}
       {data?.liveError && <p className="mb-3 rounded-xl bg-warn-soft px-3 py-2 text-xs text-warn">{data.liveError}</p>}
       {error && <p className="mb-3 rounded-xl bg-warn-soft px-3 py-2 text-sm text-warn" role="alert">{error}</p>}

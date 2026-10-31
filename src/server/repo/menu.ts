@@ -3,7 +3,7 @@ import { and, eq, inArray } from "drizzle-orm";
 import { templateBasis, type EstimateBasis } from "@/lib/nutrition/basis";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
-import { parseTypicalId, restaurantKind, typicalDish, typicalDishesFor, typicalId } from "@/lib/typicalDishes";
+import { TYPICAL_CATEGORY, parseTypicalId, restaurantKind, typicalDish, typicalDishesFor, typicalId } from "@/lib/typicalDishes";
 import { menuFileName, parseWebDishId, webDishId, type WebsiteMenu } from "@/lib/websiteMenuTypes";
 import { getDb } from "../db";
 import { menuItems, restaurants } from "../db/schema";
@@ -45,10 +45,10 @@ export async function getMenuItem(id: string) {
 
 type RestaurantLike = Pick<Restaurant, "id" | "name" | "isDemo" | "lat" | "lng" | "cuisines" | "amenity" | "tags">;
 
-function typicalView(r: RestaurantLike, slug: string, name: string, description: string, label: string): MealView {
+function typicalView(r: RestaurantLike, slug: string, name: string, description: string): MealView {
   const now = new Date().toISOString();
   return {
-    id: typicalId(r.id, slug), name, description, category: `Typical for ${label}`, priceNok: null, sourceType: "typical", sourceUrl: null,
+    id: typicalId(r.id, slug), name, description, category: TYPICAL_CATEGORY, priceNok: null, sourceType: "typical", sourceUrl: null,
     lastChecked: now, statedDiet: {}, basis: templateBasis(name, description), estimatedAt: now, model: null,
     restaurant: { id: r.id, name: r.name, isDemo: r.isDemo, lat: r.lat, lng: r.lng, cuisines: r.cuisines, halal: r.tags.halal === "yes" || r.tags.halal === "only", halalTag: r.tags.halal ?? null },
   };
@@ -57,7 +57,7 @@ function typicalView(r: RestaurantLike, slug: string, name: string, description:
 /** Generic dishes for this kind of restaurant — shown (and labelled) only when it has no menu. */
 export function typicalViews(r: RestaurantLike): MealView[] {
   const t = typicalDishesFor(r);
-  return t ? t.dishes.map((d) => typicalView(r, d.slug, d.name, d.description, t.label)) : [];
+  return t ? t.dishes.map((d) => typicalView(r, d.slug, d.name, d.description)) : [];
 }
 
 function readWebsiteMenu(restaurantId: string): WebsiteMenu | null {
@@ -95,7 +95,7 @@ export async function typicalViewById(id: string): Promise<MealView | null> {
   const t = parseTypicalId(id);
   const r = t && (await getRestaurant(t.restaurantId));
   const found = r && typicalDish(r, t.slug);
-  return r && found ? typicalView(r, t.slug, found.dish.name, found.dish.description, found.label) : null;
+  return r && found ? typicalView(r, t.slug, found.dish.name, found.dish.description) : null;
 }
 
 export async function mealViews(where: { restaurantIds?: string[]; itemIds?: string[] }, viewerId?: string): Promise<MealView[]> {

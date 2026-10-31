@@ -7,7 +7,13 @@ export interface MealFilters {
   vegetarian?: boolean;
   vegan?: boolean;
   halal?: boolean;
+  /** With halal: also include "possibly halal" (cuisine-only, unconfirmed) restaurants. */
+  halalPossible?: boolean;
   withinBudget?: boolean;
+  /** Only dishes from real menus (restaurant website, users, imports) — no generic "typical" dishes. */
+  realOnly?: boolean;
+  /** Only meals whose whole estimated range meets the limits (not just the most likely value). */
+  strict?: boolean;
   sort?: "score" | "protein_density" | "kcal" | "distance" | "protein";
 }
 

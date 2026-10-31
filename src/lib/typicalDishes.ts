@@ -134,6 +134,9 @@ export function typicalDishesFor(r: { name: string; cuisines: string[]; amenity?
 
 const PREFIX = "typical:";
 
+/** Section heading wherever generic dishes are listed. */
+export const TYPICAL_CATEGORY = "Typical dishes — not confirmed on this menu";
+
 /** Restaurant ids contain ":" themselves, so the slug goes first. */
 export function typicalId(restaurantId: string, slug: string): string {
   return `${PREFIX}${slug}:${restaurantId}`;

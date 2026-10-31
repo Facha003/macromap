@@ -56,6 +56,18 @@ export function MealSheet({ meal, onClose, initialSelections = {}, isFavorite = 
   }, [onClose]);
 
   const resolved = useMemo(() => resolveBasis(basis, sel), [basis, sel]);
+  // Facts stated on the menu (vs. assumed), e.g. "Meat: Chicken", "Pieces: 8 pcs".
+  const knownFacts = useMemo(() => {
+    if (basis.kind !== "archetype") return [];
+    return resolved.options.flatMap((g) => {
+      const v = basis.known[g.id];
+      if (v === undefined) return [];
+      if (g.kind === "count") return [`${g.label}: ${v} ${g.unit}`];
+      const ids = Array.isArray(v) ? v : [String(v)];
+      const labels = g.choices.filter((c) => ids.includes(c.id)).map((c) => c.label);
+      return labels.length ? [`${g.label}: ${labels.join(", ")}`] : [];
+    });
+  }, [basis, resolved.options]);
   const e = resolved.estimate;
 
   const doLog = () =>
@@ -146,7 +158,7 @@ export function MealSheet({ meal, onClose, initialSelections = {}, isFavorite = 
               <section aria-label="Nutrition">
                 <div className="flex items-end justify-between gap-3">
                   <div>
-                    <p className="text-xs font-medium text-ink-3">{e.status === "verified" ? "Calories" : "Estimated calories"}</p>
+                    <p className="text-xs font-medium text-ink-3">{e.status === "verified" ? "Calories (restaurant-published)" : e.status === "external" ? "Calories (reference average)" : "Estimated calories"}</p>
                     <p className="tabular text-3xl font-semibold tracking-tight">{fmtKcal(scale(e.values.kcal, portion), e.status)}</p>
                     {e.status !== "verified" && <p className="tabular text-xs text-ink-2">most likely ≈ {fmtLikely(e.values.kcal.likely * portion, 10)} kcal</p>}
                   </div>
@@ -165,10 +177,13 @@ export function MealSheet({ meal, onClose, initialSelections = {}, isFavorite = 
                   <Mini label="Fiber" value={e.values.fiber ? fmtGrams(scale(e.values.fiber, portion), e.status) : "—"} />
                   <Mini label="Sugars" value={e.values.sugar ? fmtGrams(scale(e.values.sugar, portion), e.status) : "—"} />
                   <Mini label="Sodium" value={e.values.sodiumMg ? fmtGramsMg(scale(e.values.sodiumMg, portion), e.status) : "—"} />
-                  <Mini label="Weight" value={e.servingG ? fmtGrams(scale(e.servingG, portion), e.status) : "—"} />
+                  <Mini label={e.status === "verified" ? "Weight" : "Assumed weight"} value={e.servingG ? fmtGrams(scale(e.servingG, portion), e.status) : "—"} />
                 </dl>
               </section>
 
+              {knownFacts.length > 0 && (
+                <p className="text-xs text-ink-2"><span className="font-medium text-ink">From the menu text:</span> {knownFacts.join(" · ")}</p>
+              )}
               {e.status !== "verified" && (e.mainUncertainty || resolved.unknowns.length > 0) && (
                 <section className="rounded-2xl bg-warn-soft p-3 text-xs text-warn">
                   {e.mainUncertainty && <p><span className="font-semibold">Main uncertainty:</span> {e.mainUncertainty}</p>}
@@ -325,7 +340,9 @@ function Details({ meal, estimate: e, portion }: { meal: MealView; estimate: Non
           ? "Published by the restaurant."
           : e.status === "external"
             ? "Database average for this kind of dish (Matvaretabellen), scaled to an assumed portion."
-            : `${PROVIDER_LABEL[e.provider]}: likely ingredients and portions are inferred from the menu text; every nutrient value comes from food-composition data, not from the AI.`}
+            : ["gemini", "groq", "ollama", "anthropic", "free_ai"].includes(e.provider)
+              ? `${PROVIDER_LABEL[e.provider]}: an AI read the dish name and description and suggested likely ingredients and amounts. The AI does not see or measure the food; every nutrient value is calculated from Matvaretabellen for those assumed ingredients.`
+              : `${PROVIDER_LABEL[e.provider]}: likely ingredients and portions are inferred from the menu text; every nutrient value comes from food-composition data.`}
       </p>
       {e.assumptions.length > 0 && (
         <ul className="list-disc space-y-1 pl-4">
@@ -335,7 +352,7 @@ function Details({ meal, estimate: e, portion }: { meal: MealView; estimate: Non
       {e.components.length > 0 && (
         <table className="w-full text-left">
           <thead className="text-ink-3">
-            <tr><th className="py-1 font-medium">Ingredient</th><th className="py-1 text-right font-medium">Grams</th><th className="py-1 text-right font-medium">≈ kcal</th></tr>
+            <tr><th className="py-1 font-medium">Ingredient (assumed)</th><th className="py-1 text-right font-medium">Assumed grams</th><th className="py-1 text-right font-medium">≈ kcal</th></tr>
           </thead>
           <tbody className="tabular">
             {e.components.map((c, i) => {

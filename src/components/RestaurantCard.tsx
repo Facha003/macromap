@@ -23,10 +23,18 @@ export interface RestaurantCardData {
 
 export const cuisineLabel = (c: string) => c.replace(/_/g, " ").replace(/^\w/, (m) => m.toUpperCase());
 
+const HALAL_BADGE: Partial<Record<HalalStatus, { text: string; title: string; cls: string }>> = {
+  restaurant: { text: "Halal · restaurant", title: "The restaurant itself says it is halal", cls: "bg-good-soft text-good" },
+  osm: { text: "Halal · OSM", title: "Tagged halal on OpenStreetMap (community map data)", cls: "bg-good-soft text-good" },
+  reported: { text: "Halal · you", title: "You marked this restaurant as halal (only on this device)", cls: "bg-surface-2 text-good" },
+  possible: { text: "Possibly halal", title: "Unconfirmed — only the cuisine suggests it. Ask the restaurant.", cls: "border border-dashed border-ink-3 text-ink-2" },
+};
+
+/** Halal status with its source; hover/long-press shows the evidence. */
 export function HalalBadge({ status }: { status?: HalalStatus }) {
-  if (status === "confirmed") return <span className="rounded-full bg-good-soft px-2 py-0.5 text-[11px] font-medium text-good">Halal</span>;
-  if (status === "likely") return <span className="rounded-full border border-dashed border-good px-2 py-0.5 text-[11px] font-medium text-good" title="Cuisine where halal meat is common — not confirmed">Likely halal</span>;
-  return null;
+  const b = status && HALAL_BADGE[status];
+  if (!b) return null;
+  return <span className={`shrink-0 rounded-full px-2 py-0.5 text-[11px] font-medium ${b.cls}`} title={b.title} aria-label={`${b.text}: ${b.title}`}>{b.text}</span>;
 }
 
 function Coverage({ r }: { r: RestaurantCardData }) {

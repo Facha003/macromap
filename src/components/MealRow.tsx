@@ -14,7 +14,7 @@ export function MealRow({ meal, onOpen, extra }: { meal: MealView; onOpen: () =>
         <div className="min-w-0">
           <h3 className="font-semibold leading-snug tracking-tight">
             {meal.name}
-            {meal.sourceType === "typical" && <span className="ml-2 rounded-full border border-dashed border-ink-3 px-1.5 py-0.5 align-middle text-[10px] font-medium text-ink-2">Typical · not their menu</span>}
+            <SourceTag meal={meal} />
           </h3>
           {meal.description && <p className="mt-0.5 line-clamp-2 text-xs text-ink-2">{meal.description}</p>}
         </div>
@@ -35,4 +35,21 @@ export function MealRow({ meal, onOpen, extra }: { meal: MealView; onOpen: () =>
       {extra}
     </button>
   );
+}
+
+/** Where the dish itself comes from (separate from where its nutrition comes from). */
+export function SourceTag({ meal }: { meal: MealView }) {
+  const tag =
+    meal.sourceType === "typical"
+      ? { text: "Typical · not confirmed on menu", cls: "border border-dashed border-ink-3 text-ink-2" }
+      : meal.sourceType === "website"
+        ? { text: "From restaurant website", cls: "bg-surface-2 text-ink-2" }
+        : meal.sourceType === "official"
+          ? { text: "Restaurant-published", cls: "bg-good-soft text-good" }
+          : meal.sourceType === "demo"
+            ? { text: "Demo menu", cls: "border border-dashed border-ink-3 text-ink-3" }
+            : meal.category === "Found online by AI"
+              ? { text: "Found online (AI)", cls: "bg-surface-2 text-ink-2" }
+              : { text: "Added by a user", cls: "bg-surface-2 text-ink-2" };
+  return <span className={`ml-2 inline-block rounded-full px-1.5 py-0.5 align-middle text-[10px] font-medium ${tag.cls}`}>{tag.text}</span>;
 }

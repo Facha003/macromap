@@ -13,7 +13,7 @@ import { FOOD_ATTRIBUTION, FOODS_RETRIEVED_AT } from "@/lib/nutrition/estimate";
 import { buildPrompt, extractJson, interpretationToBasis } from "@/lib/nutrition/llm";
 import { DEFAULT_OVERPASS_ENDPOINTS, fetchOverpass, overpassQuery } from "@/lib/osm";
 import { tilesForRadius, tileKey, type PlaceSearchRow, type PlaceTileRow, type PlacesIndex } from "@/lib/placeTiles";
-import { parseTypicalId, restaurantKind, typicalDish, typicalDishesFor, typicalId } from "@/lib/typicalDishes";
+import { TYPICAL_CATEGORY, parseTypicalId, restaurantKind, typicalDish, typicalDishesFor, typicalId } from "@/lib/typicalDishes";
 import { findMenuWithGemini } from "@/lib/menuFinder";
 import { estimateWithFreeAi } from "@/lib/freeAi";
 import { menuFileName, parseWebDishId, webDishId, type MenuIndex, type WebsiteMenu } from "@/lib/websiteMenuTypes";
@@ -197,7 +197,7 @@ function itemsForPlace(place: Place): Item[] {
   const t = typicalDishesFor(place);
   if (!t) return [];
   return t.dishes.map((d) => ({
-    id: typicalId(place.id, d.slug), restaurantId: place.id, name: d.name, description: d.description, category: `Typical for ${t.label}`,
+    id: typicalId(place.id, d.slug), restaurantId: place.id, name: d.name, description: d.description, category: TYPICAL_CATEGORY,
     priceNok: null, sourceType: "typical" as const, statedDiet: {}, createdAt: new Date().toISOString(),
   }));
 }
@@ -214,7 +214,7 @@ function findItem(id: string): Item | undefined {
   const place = t && findPlace(t.restaurantId);
   const found = place && typicalDish(place, t.slug);
   if (!place || !found) return undefined;
-  return { id, restaurantId: place.id, name: found.dish.name, description: found.dish.description, category: `Typical for ${found.label}`, priceNok: null, sourceType: "typical", statedDiet: {}, createdAt: new Date().toISOString() };
+  return { id, restaurantId: place.id, name: found.dish.name, description: found.dish.description, category: TYPICAL_CATEGORY, priceNok: null, sourceType: "typical", statedDiet: {}, createdAt: new Date().toISOString() };
 }
 
 function storePlaces(list: Omit<Place, "id" | "isDemo" | "seenAt">[]) {

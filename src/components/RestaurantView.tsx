@@ -66,6 +66,9 @@ export function RestaurantView({ id }: { id: string }) {
             <span className="font-medium text-ink">Halal: </span>
             {halal.status === "unknown" ? "No information." : halal.source + "."}
           </p>
+          {(halal.status === "restaurant" || halal.status === "osm" || halal.status === "reported") && (
+            <p className="mt-1 text-ink-3">This is restaurant-level information — it doesn’t verify every dish (mixed menus can include non-halal items). Ask about specific dishes.</p>
+          )}
           <div className="mt-2 flex flex-wrap gap-2">
             <button onClick={() => report(r.id, reports[r.id] === "halal" ? null : "halal")} aria-pressed={reports[r.id] === "halal"} className={`rounded-full px-3 py-1 ${reports[r.id] === "halal" ? "bg-good text-white" : "bg-surface-2"}`}>It’s halal</button>
             <button onClick={() => report(r.id, reports[r.id] === "not" ? null : "not")} aria-pressed={reports[r.id] === "not"} className={`rounded-full px-3 py-1 ${reports[r.id] === "not" ? "bg-ink text-bg" : "bg-surface-2"}`}>Not halal</button>

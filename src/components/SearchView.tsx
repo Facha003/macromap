@@ -7,14 +7,14 @@ import { useLocation } from "@/lib/client/location";
 import { track } from "@/lib/client/loading";
 import { backend, type RestaurantHit, type SearchApiResponse } from "@/lib/client/backend";
 import { useHalal } from "@/lib/client/prefs";
-import { halalStatus, isHalalOption } from "@/lib/halal";
+import { halalStatus, passesHalalFilter } from "@/lib/halal";
 import type { MealFilters } from "@/lib/queryParser";
 import type { MealResult } from "@/lib/searchCore";
 import { MealRow } from "./MealRow";
 import { MealSheet } from "./MealSheet";
 import { HalalBadge } from "./RestaurantCard";
 
-type Overrides = { maxKcal?: number; minProtein?: number; km?: number; vegetarian?: boolean; vegan?: boolean; halal?: boolean; budget?: boolean; sort?: MealFilters["sort"] };
+type Overrides = { maxKcal?: number; minProtein?: number; km?: number; vegetarian?: boolean; vegan?: boolean; halal?: boolean; budget?: boolean; real?: boolean; strict?: boolean; sort?: MealFilters["sort"] };
 
 const EXAMPLES = ["40 g protein under 650 kcal within 3 km", "high protein sushi", "vegan under 500 kcal", "kebab", "fits my remaining budget"];
 
@@ -27,7 +27,7 @@ export function SearchView({ initialQuery = "" }: { initialQuery?: string }) {
   const [error, setError] = useState<string | null>(null);
   const [open, setOpen] = useState<MealResult | null>(null);
   const [showFilters, setShowFilters] = useState(false);
-  const { halalOnly, setHalalOnly, reports } = useHalal();
+  const { halalOnly, setHalalOnly, includePossible, setIncludePossible, reports } = useHalal();
   const [restaurantHits, setRestaurantHits] = useState<RestaurantHit[]>([]);
 
   const run = useCallback(
@@ -41,6 +41,7 @@ export function SearchView({ initialQuery = "" }: { initialQuery?: string }) {
       }
       for (const [k, v] of Object.entries(o)) if (v !== undefined) p.set(k, v === true ? "1" : v === false ? "0" : String(v));
       if (o.halal === undefined && halalOnly) p.set("halal", "1");
+      if (includePossible) p.set("halalPossible", "1");
       try {
         const [res, hits] = await Promise.all([
           track(backend.search(p, reports)),
@@ -54,13 +55,13 @@ export function SearchView({ initialQuery = "" }: { initialQuery?: string }) {
         setLoading(false);
       }
     },
-    [location, halalOnly, reports],
+    [location, halalOnly, includePossible, reports],
   );
 
   useEffect(() => {
     if (ready) run(q, ov);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [ready, location, ov, halalOnly]);
+  }, [ready, location, ov, halalOnly, includePossible]);
 
   // Re-run once a slow live places lookup finishes on the server.
   useEffect(() => {
@@ -107,6 +108,8 @@ export function SearchView({ initialQuery = "" }: { initialQuery?: string }) {
           <button key={p} className={chip(f?.minProtein === p)} onClick={() => setO({ minProtein: f?.minProtein === p ? 0 : p })}>≥ {p} g protein</button>
         ))}
         <button className={chip(Boolean(f?.withinBudget))} onClick={() => setO({ budget: !f?.withinBudget })}>Within today’s budget</button>
+        <button className={chip(Boolean(f?.realOnly))} aria-pressed={Boolean(f?.realOnly)} onClick={() => setO({ real: !f?.realOnly })}>Real menu items only</button>
+        <button className={chip(Boolean(f?.strict))} aria-pressed={Boolean(f?.strict)} title="Only meals whose whole estimated range meets your limits" onClick={() => setO({ strict: !f?.strict })}>Whole range fits</button>
       </div>
 
       {showFilters && (
@@ -123,8 +126,9 @@ export function SearchView({ initialQuery = "" }: { initialQuery?: string }) {
               <button className={chip(Boolean(f?.vegetarian))} onClick={() => setO({ vegetarian: !f?.vegetarian })}>Vegetarian</button>
               <button className={chip(Boolean(f?.vegan))} onClick={() => setO({ vegan: !f?.vegan })}>Vegan</button>
               <button className={chip(Boolean(f?.halal))} onClick={() => { setHalalOnly(!f?.halal); setO({ halal: !f?.halal }); }}>Halal</button>
+              {f?.halal && <button className={chip(includePossible)} onClick={() => setIncludePossible(!includePossible)}>+ possibly halal</button>}
             </div>
-            <p className="mt-1.5 text-[11px] text-ink-3">Halal only matches restaurants that state it (e.g. on OpenStreetMap). Vegetarian/vegan uses the restaurant’s label, else is inferred from estimated ingredients — always confirm when ordering.</p>
+            <p className="mt-1.5 text-[11px] text-ink-3">Halal only includes restaurants with halal evidence (stated by the restaurant, an OpenStreetMap tag, or your own report). “Possibly halal” (cuisine only) is opt-in. Vegetarian/vegan uses the restaurant’s label, else is inferred from estimated ingredients — always confirm when ordering.</p>
           </div>
           <div>
             <p className="mb-1.5 text-xs font-medium text-ink-2">Sort by</p>
@@ -147,7 +151,7 @@ export function SearchView({ initialQuery = "" }: { initialQuery?: string }) {
             f.maxDistanceKm && `within ${f.maxDistanceKm} km`,
             f.vegetarian && "vegetarian",
             f.vegan && "vegan",
-            f.halal && "halal (confirmed or likely, no pork)",
+            f.halal && (includePossible ? "halal incl. possibly halal" : "halal (evidence only)"),
             f.withinBudget && `within ${Math.round(data!.remainingKcal)} kcal left today`,
           ].filter(Boolean).join(" · ") || "All meals nearby"}
           {location && <span className="text-ink-3"> · near {location.label}</span>}
@@ -166,12 +170,12 @@ export function SearchView({ initialQuery = "" }: { initialQuery?: string }) {
           <div className="space-y-2">{Array.from({ length: 4 }, (_, i) => <div key={i} className="h-32 animate-pulse rounded-[20px] bg-surface-2" />)}</div>
         ) : data ? (
           <>
-            {restaurantHits.filter((h) => !halalOnly || isHalalOption(halalStatus(h, reports[h.id]).status)).length > 0 && (
+            {restaurantHits.filter((h) => !halalOnly || passesHalalFilter(halalStatus(h, reports[h.id]).status, includePossible)).length > 0 && (
               <section className="mb-4">
                 <h2 className="mb-2 text-xs font-semibold uppercase tracking-wider text-ink-3">Restaurants</h2>
                 <ul className="divide-y divide-line overflow-hidden rounded-[20px] border border-line bg-surface">
                   {restaurantHits
-                    .filter((h) => !halalOnly || isHalalOption(halalStatus(h, reports[h.id]).status))
+                    .filter((h) => !halalOnly || passesHalalFilter(halalStatus(h, reports[h.id]).status, includePossible))
                     .map((h) => (
                       <li key={h.id}>
                         <Link href={`/r/?id=${encodeURIComponent(h.id)}`} className="flex items-center justify-between gap-2 px-4 py-3 text-sm hover:bg-surface-2">
@@ -185,7 +189,7 @@ export function SearchView({ initialQuery = "" }: { initialQuery?: string }) {
             )}
             <p className="mb-2 flex items-center gap-2 text-xs text-ink-3">
               {loading && <Loader2 size={12} className="animate-spin" />}
-              {data.results.length} meals from {data.scanned.restaurants} places nearby · {data.scanned.withMenus} with real menu data, the rest show typical dishes
+              {data.results.length} menu items from {data.scanned.withMenus} restaurants with menus ({data.scanned.restaurants} places nearby)
             </p>
             <ul className="space-y-2">
               {data.results.map((r) => (
@@ -200,6 +204,7 @@ export function SearchView({ initialQuery = "" }: { initialQuery?: string }) {
                         <span className="tabular rounded bg-surface-2 px-1.5 py-0.5 font-medium text-ink">Fit {r.score}</span>
                         <HalalBadge status={r.diet.halal} />
                         {r.reasons.slice(0, 2).map((x) => <span key={x}>· {x}</span>)}
+                        <FitNote r={r} />
                       </div>
                     }
                   />
@@ -207,7 +212,32 @@ export function SearchView({ initialQuery = "" }: { initialQuery?: string }) {
               ))}
             </ul>
             {data.results.length === 0 && (
-              <p className="card p-6 text-center text-sm text-ink-2">No meals with nutrition data match these filters. Try relaxing them or a larger distance.</p>
+              <p className="card p-6 text-center text-sm text-ink-2">
+                No menu items match these filters nearby.{f?.strict ? " “Whole range fits” is on — turning it off also shows meals that possibly fit." : " Try relaxing the limits or a larger distance."}
+              </p>
+            )}
+            {!f?.realOnly && data.typicalResults.length > 0 && (
+              <section className="mt-6" aria-label="Typical dishes">
+                <h2 className="text-xs font-semibold uppercase tracking-wider text-ink-3">Typical dishes — not confirmed on these menus</h2>
+                <p className="mb-2 mt-0.5 text-xs text-ink-3">Generic examples for nearby restaurants we have no menu for. The restaurant may not sell them; open one to find its real menu.</p>
+                <ul className="space-y-2 opacity-90">
+                  {data.typicalResults.map((r) => (
+                    <li key={r.meal.id}>
+                      <MealRow
+                        meal={r.meal}
+                        onOpen={() => setOpen(r)}
+                        extra={
+                          <div className="mt-2 flex flex-wrap items-center gap-x-2 gap-y-1 border-t border-line pt-2 text-[11px] text-ink-2">
+                            <span className="font-medium text-ink">{r.meal.restaurant.name}</span>
+                            <span>{formatDistance(r.distanceM)}</span>
+                            <FitNote r={r} />
+                          </div>
+                        }
+                      />
+                    </li>
+                  ))}
+                </ul>
+              </section>
             )}
           </>
         ) : null}
@@ -215,4 +245,10 @@ export function SearchView({ initialQuery = "" }: { initialQuery?: string }) {
       {open && <MealSheet meal={open.meal} onClose={() => setOpen(null)} />}
     </div>
   );
+}
+
+/** How a meal relates to the user's limits, honest about estimate ranges. */
+function FitNote({ r }: { r: MealResult }) {
+  if (r.fit === "fits") return null;
+  return <span className="w-full rounded bg-warn-soft px-1.5 py-0.5 text-warn">Possibly fits — {r.fitNotes.join("; ")}</span>;
 }

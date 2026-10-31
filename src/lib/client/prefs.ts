@@ -4,6 +4,7 @@ import type { HalalReport } from "@/lib/halal";
 
 /** Per-browser preferences shared by the server and static builds. */
 const HALAL_KEY = "mm.halalMode";
+const HALAL_POSSIBLE_KEY = "mm.halalPossible";
 const REPORTS_KEY = "mm.halalReports";
 const EVT = "mm-prefs";
 
@@ -31,10 +32,12 @@ export function getHalalReports(): Record<string, HalalReport> {
 /** "Halal only" mode plus the user's own halal reports for restaurants. */
 export function useHalal() {
   const [halalOnly, setHalalOnlyState] = useState(false);
+  const [includePossible, setIncludePossibleState] = useState(false);
   const [reports, setReports] = useState<Record<string, HalalReport>>({});
   useEffect(() => {
     const sync = () => {
       setHalalOnlyState(read(HALAL_KEY, false));
+      setIncludePossibleState(read(HALAL_POSSIBLE_KEY, false));
       setReports(read(REPORTS_KEY, {}));
     };
     sync();
@@ -42,11 +45,12 @@ export function useHalal() {
     return () => window.removeEventListener(EVT, sync);
   }, []);
   const setHalalOnly = useCallback((v: boolean) => write(HALAL_KEY, v), []);
+  const setIncludePossible = useCallback((v: boolean) => write(HALAL_POSSIBLE_KEY, v), []);
   const report = useCallback((restaurantId: string, r: HalalReport | null) => {
     const next = { ...read<Record<string, HalalReport>>(REPORTS_KEY, {}) };
     if (r) next[restaurantId] = r;
     else delete next[restaurantId];
     write(REPORTS_KEY, next);
   }, []);
-  return { halalOnly, setHalalOnly, reports, report };
+  return { halalOnly, setHalalOnly, includePossible, setIncludePossible, reports, report };
 }

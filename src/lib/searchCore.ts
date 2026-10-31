@@ -4,7 +4,7 @@ import { inferDiet } from "./nutrition/diet";
 import type { DataStatus, EstimateProvider, NutritionValues } from "./nutrition/types";
 import type { MealFilters } from "./queryParser";
 import { scoreMeal, type Goals, type Totals } from "./scoring";
-import { containsPork, halalStatus, isHalalOption, type HalalReport, type HalalStatus } from "./halal";
+import { containsPork, halalStatus, passesHalalFilter, type HalalReport, type HalalStatus } from "./halal";
 import type { MealView } from "@/server/repo/menu";
 
 export interface MealResult {
@@ -16,6 +16,35 @@ export interface MealResult {
   score: number;
   reasons: string[];
   diet: { vegetarian: boolean; vegan: boolean; halal: HalalStatus; pork: boolean; inferred: boolean };
+  /**
+   * fits     — the whole estimated range meets the limits (or there are no numeric limits)
+   * possibly — only the most likely value meets them; the range crosses a limit
+   */
+  fit: "fits" | "possibly";
+  /** Why it only possibly fits, e.g. "could be up to 750 kcal (limit 650)". */
+  fitNotes: string[];
+}
+
+/** Checks numeric limits against both the most likely value and the full range. */
+export function rangeFit(v: NutritionValues, f: Pick<MealFilters, "maxKcal" | "minKcal" | "minProtein">, maxBudget: number | null): { likelyOk: boolean; fit: MealResult["fit"]; notes: string[] } {
+  const notes: string[] = [];
+  let likelyOk = true;
+  const k = v.kcal;
+  const p = v.protein;
+  const max = Math.min(f.maxKcal ?? Infinity, maxBudget ?? Infinity);
+  if (Number.isFinite(max)) {
+    if (k.likely > max) likelyOk = false;
+    else if (k.max > max) notes.push(`could be up to ${Math.round(k.max / 10) * 10} kcal (limit ${Math.round(max)})`);
+  }
+  if (f.minKcal != null) {
+    if (k.likely < f.minKcal) likelyOk = false;
+    else if (k.min < f.minKcal) notes.push(`could be as low as ${Math.round(k.min / 10) * 10} kcal`);
+  }
+  if (f.minProtein != null) {
+    if (p.likely < f.minProtein) likelyOk = false;
+    else if (p.min < f.minProtein) notes.push(`protein could be as low as ${Math.round(p.min)} g (target ${f.minProtein} g)`);
+  }
+  return { likelyOk, fit: notes.length ? "possibly" : "fits", notes };
 }
 
 export interface RestaurantLite {
@@ -27,7 +56,10 @@ export interface RestaurantLite {
 }
 
 export interface SearchResponse {
+  /** Dishes from real menus (restaurant website, users, imports, demo). */
   results: MealResult[];
+  /** Generic dishes for restaurants without a menu — never mixed into `results`. */
+  typicalResults: MealResult[];
   /** Restaurants matching the text that have no menu data yet — shown honestly, not hidden. */
   noMenuMatches: Pick<RestaurantLite, "id" | "name" | "cuisines" | "distanceM">[];
   scanned: { restaurants: number; withMenus: number; meals: number };
@@ -53,7 +85,7 @@ export function rankMeals(args: {
   consumed: Totals;
   limit?: number;
   halalReports?: Record<string, HalalReport>;
-}): Pick<SearchResponse, "results" | "noMenuMatches"> {
+}): Pick<SearchResponse, "results" | "typicalResults" | "noMenuMatches"> {
   const { filters: f } = args;
   const remaining = Math.max(0, args.goals.kcalTarget - args.consumed.kcal);
   const byId = new Map(args.restaurants.map((r) => [r.id, r]));
@@ -62,21 +94,22 @@ export function rankMeals(args: {
   for (const meal of args.meals) {
     const r = byId.get(meal.restaurant.id);
     if (!r) continue;
+    if (f.realOnly && meal.sourceType === "typical") continue;
     if (!matchesText(`${meal.name} ${meal.description ?? ""} ${r.name} ${r.cuisines.join(" ")} ${meal.category ?? ""}`, f.text)) continue;
     const { estimate } = resolveBasis(meal.basis);
     if (!estimate) continue;
     const v = estimate.values;
-    if (f.maxKcal != null && v.kcal.likely > f.maxKcal) continue;
-    if (f.minKcal != null && v.kcal.likely < f.minKcal) continue;
-    if (f.minProtein != null && v.protein.likely < f.minProtein) continue;
-    if (f.withinBudget && v.kcal.likely > remaining) continue;
+    const fit = rangeFit(v, f, f.withinBudget ? remaining : null);
+    if (!fit.likelyOk) continue;
+    if (f.strict && fit.fit !== "fits") continue;
 
     const inferred = inferDiet(estimate.components);
     const stated = meal.statedDiet;
     const pork = containsPork(estimate.components);
-    const halal = stated.halal
-      ? "confirmed"
-      : halalStatus({ name: meal.restaurant.name, cuisines: meal.restaurant.cuisines, halalTag: meal.restaurant.halalTag ?? (meal.restaurant.halal ? "yes" : null) }, args.halalReports?.[meal.restaurant.id]).status;
+    const halal = halalStatus(
+      { name: meal.restaurant.name, cuisines: meal.restaurant.cuisines, halalTag: meal.restaurant.halalTag ?? (meal.restaurant.halal ? "yes" : null), statedHalal: stated.halal },
+      args.halalReports?.[meal.restaurant.id],
+    ).status;
     const diet = {
       vegetarian: stated.vegetarian ?? inferred.vegetarian,
       vegan: stated.vegan ?? inferred.vegan,
@@ -86,14 +119,12 @@ export function rankMeals(args: {
     };
     if (f.vegetarian && !diet.vegetarian) continue;
     if (f.vegan && !diet.vegan) continue;
-    // Halal: restaurant confirmed or likely halal, and no pork in the dish.
-    if (f.halal && (!isHalalOption(halal) || pork)) continue;
+    // Halal: affirmative restaurant-level evidence (or opted-in "possibly halal"), and no pork/alcohol in the dish.
+    if (f.halal && (!passesHalalFilter(halal, f.halalPossible) || pork)) continue;
 
     const distanceM = haversineM({ lat: args.lat, lng: args.lng }, meal.restaurant);
     const s = scoreMeal({ values: v, status: estimate.status, distanceM }, args.goals, args.consumed);
-    // Generic "typical" dishes rank below dishes from the restaurant's real menu.
-    const typical = meal.sourceType === "typical";
-    results.push({ meal, values: v, status: estimate.status, provider: estimate.provider, distanceM, score: typical ? Math.round(s.score * 0.85) : s.score, reasons: typical ? ["Typical dish — check their menu", ...s.reasons].slice(0, 3) : s.reasons, diet });
+    results.push({ meal, values: v, status: estimate.status, provider: estimate.provider, distanceM, score: s.score, reasons: s.reasons, diet, fit: fit.fit, fitNotes: fit.notes });
   }
 
   const sorters: Record<NonNullable<MealFilters["sort"]>, (a: MealResult, b: MealResult) => number> = {
@@ -103,7 +134,9 @@ export function rankMeals(args: {
     protein: (a, b) => b.values.protein.likely - a.values.protein.likely,
     distance: (a, b) => a.distanceM - b.distanceM,
   };
-  results.sort(sorters[f.sort ?? "score"]);
+  // With numeric limits, meals whose whole range fits come before ones that only possibly fit.
+  const hasLimits = f.maxKcal != null || f.minKcal != null || f.minProtein != null || f.withinBudget;
+  results.sort((a, b) => (hasLimits ? Number(a.fit !== "fits") - Number(b.fit !== "fits") : 0) || sorters[f.sort ?? "score"](a, b));
 
   const noMenuMatches = f.text
     ? args.restaurants
@@ -112,7 +145,10 @@ export function rankMeals(args: {
         .map(({ id, name, cuisines, distanceM }) => ({ id, name, cuisines, distanceM }))
     : [];
 
-  return { results: results.slice(0, args.limit ?? 60), noMenuMatches };
+  // Real menu items and generic examples are kept in separate lists, never interleaved.
+  const real = results.filter((r) => r.meal.sourceType !== "typical");
+  const typical = results.filter((r) => r.meal.sourceType === "typical");
+  return { results: real.slice(0, args.limit ?? 60), typicalResults: typical.slice(0, 20), noMenuMatches };
 }
 
 /** Builds filters from the search request parameters (shared by API route and static build). */
@@ -131,7 +167,10 @@ export function filtersFromParams(p: URLSearchParams, parsed: MealFilters): Meal
     vegetarian: flag("vegetarian") ?? parsed.vegetarian,
     vegan: flag("vegan") ?? parsed.vegan,
     halal: flag("halal") ?? parsed.halal,
+    halalPossible: flag("halalPossible") ?? parsed.halalPossible,
     withinBudget: flag("budget") ?? parsed.withinBudget,
+    realOnly: flag("real") ?? parsed.realOnly,
+    strict: flag("strict") ?? parsed.strict,
     sort: (["score", "protein_density", "kcal", "distance", "protein"] as const).find((s) => s === p.get("sort")) ?? parsed.sort,
   };
 }
