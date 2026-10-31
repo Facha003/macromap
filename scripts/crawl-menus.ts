@@ -38,6 +38,7 @@ const UA = "MacroMapBot/0.1 (+https://github.com/Facha003/macromap; reads public
 const LIMIT = Number(process.env.MENU_CRAWL_LIMIT || 350);
 const TIME_BUDGET_MS = Number(process.env.MENU_CRAWL_MINUTES || 25) * 60_000;
 const RECHECK_MS = 14 * 24 * 3600_000;
+const RECHECK_ERROR_MS = 3 * 24 * 3600_000;
 const CONCURRENCY = 6;
 const MAX_BYTES = 2_000_000;
 const OSLO = { minLat: 59.8, maxLat: 60.05, minLng: 10.55, maxLng: 10.95 };
@@ -78,6 +79,13 @@ async function aiExtract(pageText: string): Promise<ParsedDish[] | null> {
       }
       return null;
     }
+    if (!body.trimStart().startsWith("{")) {
+      // The endpoint answered, but not with JSON (seen: a bare "OK") — stop spending time on it this run.
+      console.warn(`  GitHub Models returned a non-JSON reply (${body.slice(0, 40).trim()}) — continuing without AI`);
+      aiStats.badJson++;
+      aiAvailable = false;
+      return null;
+    }
     let content = "";
     try {
       content = JSON.parse(body)?.choices?.[0]?.message?.content ?? "";
@@ -100,16 +108,23 @@ async function aiExtract(pageText: string): Promise<ParsedDish[] | null> {
 const lastHit = new Map<string, number>();
 const robotsCache = new Map<string, Promise<string>>();
 
-async function politeFetch(url: string): Promise<Response | null> {
+async function politeFetch(url: string, retry = true): Promise<Response | null> {
   const host = new URL(url).host;
   const wait = (lastHit.get(host) ?? 0) + 1100 - Date.now();
   if (wait > 0) await new Promise((r) => setTimeout(r, wait));
   lastHit.set(host, Date.now());
+  let res: Response | null = null;
   try {
-    return await fetch(url, { headers: { "user-agent": UA, accept: "text/html,application/pdf;q=0.9,*/*;q=0.5", "accept-language": "nb,no,en" }, redirect: "follow", signal: AbortSignal.timeout(15_000) });
+    res = await fetch(url, { headers: { "user-agent": UA, accept: "text/html,application/pdf;q=0.9,*/*;q=0.5", "accept-language": "nb,no,en" }, redirect: "follow", signal: AbortSignal.timeout(15_000) });
   } catch {
-    return null;
+    res = null;
   }
+  // One retry for network errors and server hiccups (never for 4xx — that's the site's answer).
+  if (retry && (!res || res.status >= 500)) {
+    await new Promise((r) => setTimeout(r, 3000));
+    return politeFetch(url, false);
+  }
+  return res;
 }
 
 async function allowed(url: string): Promise<boolean> {
@@ -149,7 +164,12 @@ async function crawl(t: Target): Promise<{ status: MenuIndex[string]["status"]; 
   const start = t.url.startsWith("http") ? t.url : `https://${t.url}`;
   if (isSkippedHost(start)) return { status: "none" };
   if (!(await allowed(start))) return { status: "blocked" };
-  const res = await politeFetch(start);
+  let res = await politeFetch(start);
+  // OSM often has outdated deep links; fall back to the site's front page.
+  if (res && (res.status === 404 || res.status === 410) && new URL(start).pathname.length > 1) {
+    const root = new URL(start).origin + "/";
+    if (await allowed(root)) res = await politeFetch(root);
+  }
   if (!res || !res.ok) return { status: "error" };
   const home = await readBody(res);
   if (!home) return { status: "error" };
@@ -211,7 +231,7 @@ async function main() {
   }
   const now = Date.now();
   const due = targets
-    .filter((t) => !index[t.id] || now - Date.parse(index[t.id].checkedAt) > RECHECK_MS)
+    .filter((t) => !index[t.id] || now - Date.parse(index[t.id].checkedAt) > (index[t.id].status === "error" ? RECHECK_ERROR_MS : RECHECK_MS))
     .sort((a, b) => Number(b.inOslo) - Number(a.inOslo) || Number(Boolean(index[a.id])) - Number(Boolean(index[b.id])) || (index[a.id]?.checkedAt ?? "").localeCompare(index[b.id]?.checkedAt ?? ""))
     .slice(0, LIMIT);
   console.log(`${targets.length} restaurants have a website; ${due.length} due this run. GitHub Models: ${aiAvailable ? `on (${AI_MODEL}, budget ${aiBudget})` : "off (no GITHUB_TOKEN)"}`);
