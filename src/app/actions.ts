@@ -13,7 +13,7 @@ import { getItemBasis } from "@/server/nutrition/service";
 import { deleteOwnDishes, derivedViewById, getMenuItem, getRestaurant, mealViews, typicalViews, websiteViews } from "@/server/repo/menu";
 import { parseTypicalId } from "@/lib/typicalDishes";
 import { parseWebDishId } from "@/lib/websiteMenuTypes";
-import { templateBasis } from "@/lib/nutrition/basis";
+
 import * as repo from "@/server/repo/user";
 
 const selectionsSchema = z.record(z.string(), z.union([z.string(), z.array(z.string()), z.number()])).default({});
@@ -28,7 +28,7 @@ export async function logMeal(input: { menuItemId: string; selections: unknown; 
   // Typical and website dishes aren't stored as menu items; rebuild them from the id.
   if (parseTypicalId(input.menuItemId) || parseWebDishId(input.menuItemId)) {
     const meal = await derivedViewById(input.menuItemId);
-    const est = meal && resolveBasis(templateBasis(meal.name, meal.description ?? ""), selections).estimate;
+    const est = meal && resolveBasis(meal.basis, selections).estimate;
     if (!meal || !est) throw new Error("Meal not found");
     const tv = est.values;
     await repo.addEntry({

@@ -12,6 +12,10 @@ on:
         description: "Max restaurant websites to check for menus"
         required: false
         default: "600"
+      recheck:
+        description: "Re-check sites with these statuses now (e.g. none,no-text)"
+        required: false
+        default: ""
 
 permissions:
   contents: read
@@ -61,11 +65,13 @@ jobs:
         id: menus
         if: github.event_name != 'push'
         continue-on-error: true
-        timeout-minutes: 35
+        timeout-minutes: 55
         run: npm run menus:crawl
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           MENU_CRAWL_LIMIT: ${{ github.event.inputs.limit || '600' }}
+          MENU_RECHECK: ${{ github.event.inputs.recheck || '' }}
+          MENU_CRAWL_MINUTES: ${{ github.event_name == 'workflow_dispatch' && '45' || '25' }}
       - if: steps.menus.outcome == 'success'
         uses: actions/cache/save@v4
         with:

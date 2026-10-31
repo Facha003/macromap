@@ -40,6 +40,14 @@ Add`;
     expect(parseMenuText("Drikke\nCoca-Cola 0,5 l\nkr 39,00")).toEqual([{ name: "Coca-Cola 0,5 l", description: null, priceNok: 39 }]);
   });
 
+  it("reads labelled price lines (takeaway / eat-in, small / large)", () => {
+    const text = "Kylling\nTomatsaus, mozzarella, kylling\nTakeaway:209 ,- Spise her:224,-\nMARGARITA\nTomatsaus, mozzarella\nLiten 129 / Stor 189";
+    expect(parseMenuText(text)).toEqual([
+      { name: "Kylling", description: "Tomatsaus, mozzarella, kylling", priceNok: 209 },
+      { name: "MARGARITA", description: "Tomatsaus, mozzarella", priceNok: 129 },
+    ]);
+  });
+
   it("de-duplicates and ignores noise", () => {
     expect(parseMenuText("Most ordered\nPad thai\n189 kr\nPad thai\n189 kr\nSold out")).toHaveLength(1);
   });

@@ -3,7 +3,7 @@ import { and, eq, inArray } from "drizzle-orm";
 import { templateBasis, type EstimateBasis } from "@/lib/nutrition/basis";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
-import { parseTypicalId, typicalDish, typicalDishesFor, typicalId } from "@/lib/typicalDishes";
+import { parseTypicalId, restaurantKind, typicalDish, typicalDishesFor, typicalId } from "@/lib/typicalDishes";
 import { menuFileName, parseWebDishId, webDishId, type WebsiteMenu } from "@/lib/websiteMenuTypes";
 import { getDb } from "../db";
 import { menuItems, restaurants } from "../db/schema";
@@ -74,7 +74,7 @@ export function websiteViews(r: RestaurantLike): MealView[] {
   if (!menu) return [];
   return menu.dishes.map((d, n) => ({
     id: webDishId(r.id, n), name: d.name, description: d.description, category: "From their website", priceNok: d.priceNok, sourceType: "website" as const,
-    sourceUrl: menu.sourceUrl, lastChecked: menu.checkedAt, statedDiet: {}, basis: templateBasis(d.name, d.description ?? ""), estimatedAt: menu.checkedAt, model: null,
+    sourceUrl: menu.sourceUrl, lastChecked: menu.checkedAt, statedDiet: {}, basis: templateBasis(d.name, d.description ?? "", "template", restaurantKind(r)), estimatedAt: menu.checkedAt, model: null,
     restaurant: { id: r.id, name: r.name, isDemo: r.isDemo, lat: r.lat, lng: r.lng, cuisines: r.cuisines, halal: r.tags.halal === "yes" || r.tags.halal === "only", halalTag: r.tags.halal ?? null },
   }));
 }

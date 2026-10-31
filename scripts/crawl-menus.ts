@@ -40,6 +40,10 @@ const TIME_BUDGET_MS = Number(process.env.MENU_CRAWL_MINUTES || 25) * 60_000;
 const RECHECK_MS = 14 * 24 * 3600_000;
 const RECHECK_ERROR_MS = 3 * 24 * 3600_000;
 const CONCURRENCY = 6;
+const MAX_PAGES = 7;
+const COMMON_MENU_PATHS = ["/meny", "/menu", "/menyer", "/mat", "/meny/", "/menu/", "/lunsj", "/middag", "/spisekart", "/en/menu"];
+// Statuses to re-check now even if checked recently (e.g. MENU_RECHECK=none,no-text after crawler improvements).
+const RECHECK_NOW = new Set((process.env.MENU_RECHECK || "").split(",").map((x) => x.trim()).filter(Boolean));
 const MAX_BYTES = 2_000_000;
 const OSLO = { minLat: 59.8, maxLat: 60.05, minLng: 10.55, maxLng: 10.95 };
 
@@ -176,12 +180,28 @@ async function crawl(t: Target): Promise<{ status: MenuIndex[string]["status"]; 
 
   // Candidate pages: the start page plus up to 3 same-site menu links.
   const pages: { url: string; html?: string; text: string }[] = [{ url: res.url, html: home.html, text: home.text }];
-  if (home.html) {
-    for (const link of menuLinks(home.html, res.url)) {
-      if (isSkippedHost(link) || !(await allowed(link))) continue;
-      const r = await politeFetch(link);
-      const body = r && r.ok ? await readBody(r) : null;
-      if (body) pages.push({ url: r!.url, html: body.html, text: body.text });
+  const seen = new Set([res.url]);
+  const visit = async (link: string) => {
+    if (seen.has(link) || pages.length >= MAX_PAGES || isSkippedHost(link) || !(await allowed(link))) return null;
+    seen.add(link);
+    const r = await politeFetch(link);
+    const body = r && r.ok ? await readBody(r) : null;
+    if (!body) return null;
+    const page = { url: r!.url, html: body.html, text: body.text };
+    pages.push(page);
+    return page;
+  };
+  if (home.html) for (const link of menuLinks(home.html, res.url)) await visit(link);
+  // A menu "hub" page often only links to the real menus (lunsj / middag / takeaway): go one level deeper.
+  for (const p of pages.slice(1)) {
+    if (p.html && !looksLikeMenu(p.text)) for (const link of menuLinks(p.html, p.url, 2)) await visit(link);
+  }
+  // No menu link at all? Try the addresses restaurant sites usually use.
+  if (!pages.some((p) => looksLikeMenu(p.text))) {
+    const origin = new URL(res.url).origin;
+    for (const path of COMMON_MENU_PATHS) {
+      if (pages.length >= MAX_PAGES || pages.some((p) => looksLikeMenu(p.text))) break;
+      await visit(origin + path);
     }
   }
 
@@ -231,7 +251,7 @@ async function main() {
   }
   const now = Date.now();
   const due = targets
-    .filter((t) => !index[t.id] || now - Date.parse(index[t.id].checkedAt) > (index[t.id].status === "error" ? RECHECK_ERROR_MS : RECHECK_MS))
+    .filter((t) => !index[t.id] || RECHECK_NOW.has(index[t.id].status) || now - Date.parse(index[t.id].checkedAt) > (index[t.id].status === "error" ? RECHECK_ERROR_MS : RECHECK_MS))
     .sort((a, b) => Number(b.inOslo) - Number(a.inOslo) || Number(Boolean(index[a.id])) - Number(Boolean(index[b.id])) || (index[a.id]?.checkedAt ?? "").localeCompare(index[b.id]?.checkedAt ?? ""))
     .slice(0, LIMIT);
   console.log(`${targets.length} restaurants have a website; ${due.length} due this run. GitHub Models: ${aiAvailable ? `on (${AI_MODEL}, budget ${aiBudget})` : "off (no GITHUB_TOKEN)"}`);

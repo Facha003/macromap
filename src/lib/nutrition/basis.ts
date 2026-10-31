@@ -1,4 +1,5 @@
-import { detectArchetype, genericOptions, getArchetype } from "./archetypes";
+import { detectArchetype, genericOptions, getArchetype, type Archetype } from "./archetypes";
+import type { RestaurantKind } from "../typicalDishes";
 import type { FoodKey } from "./catalog";
 import { customize, type OptionGroup, type Selections } from "./customize";
 import { estimateFromComponents, estimateFromOfficial } from "./estimate";
@@ -80,9 +81,31 @@ export function resolveBasis(basis: EstimateBasis, user: Selections = {}): Resol
  * Rule-based estimator: recognises a dish archetype from the menu text and infers
  * choices from keywords. Used when no AI provider is configured or the AI fails.
  */
-export function templateBasis(name: string, description = "", provider: EstimateProvider = "template"): EstimateBasis {
+/** Generic matches that the restaurant's kind can sharpen (e.g. "Pollo" on a pizzeria menu is a pizza). */
+const OVERRIDABLE = new Set(["plate", "fish_main", "meat_main", "meat_starter", "naan", "salad"]);
+
+function withRestaurantHint(a: Archetype | undefined, hint: RestaurantKind | null | undefined, text: string): { a: Archetype | undefined; known?: Selections } {
+  if (!hint) return { a };
+  const generic = !a || OVERRIDABLE.has(a.id);
+  if (hint === "pizza" && generic && a?.id !== "salad" && /mozzarella|tomatsaus|tomato sauce|san marzano|fior di latte|pizza|crème fraîche|creme fraiche|hvit saus|white sauce|\bost\b|cheese|pepperoni|skinke|salami|nduja/.test(text)) {
+    return { a: getArchetype("pizza") };
+  }
+  if (hint === "sushi" && generic && a?.id !== "salad" && /laks|salmon|tun|tuna|yellowtail|hamachi|kveite|halibut|scampi|reke|shrimp|ebi|ål\b|eel|unagi|crab|tobiko|kamskjell|scallop|nigiri|sashimi/.test(text)) {
+    return { a: getArchetype("sushi_mix"), known: { pieces: 2, type: /sashimi/.test(text) ? "sashimi" : "nigiri" } };
+  }
+  if (a?.id === "plate") {
+    if (hint === "asian") return { a: getArchetype("rice_bowl") };
+    if (hint === "kebab") return { a: getArchetype("kebab_plate") };
+    if (hint === "indian") return { a: getArchetype("curry") };
+    if (hint === "mexican") return { a: getArchetype("burrito") };
+  }
+  return { a };
+}
+
+export function templateBasis(name: string, description = "", provider: EstimateProvider = "template", hint?: RestaurantKind | null): EstimateBasis {
   const text = `${name} ${description}`.toLowerCase();
-  const a = detectArchetype(name, description);
+  const hinted = withRestaurantHint(detectArchetype(name, description), hint, text);
+  const a = hinted.a;
   if (!a) {
     return {
       kind: "unavailable",
@@ -93,7 +116,7 @@ export function templateBasis(name: string, description = "", provider: Estimate
   // quantities ("large") still leave the portion uncertain.
   const inferred = a.infer?.(text, name.toLowerCase()) ?? {};
   const defaults: Selections = {};
-  const known: Selections = knownFromText(a.id, text);
+  const known: Selections = { ...hinted.known, ...knownFromText(a.id, text) };
   for (const [id, v] of Object.entries(inferred)) {
     const group = a.options.find((o) => o.id === id);
     if (group && !group.narrows && group.kind === "single") known[id] = v;

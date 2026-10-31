@@ -2,6 +2,7 @@ import "server-only";
 import { createHash } from "node:crypto";
 import { desc, eq, inArray, sql } from "drizzle-orm";
 import { resolveBasis, templateBasis, type EstimateBasis } from "@/lib/nutrition/basis";
+import { restaurantKind } from "@/lib/typicalDishes";
 import type { OfficialNutrition } from "@/lib/nutrition/types";
 import { getDb } from "../db";
 import { menuItems, nutritionRecords, recipeComponents, restaurants } from "../db/schema";
@@ -122,7 +123,7 @@ export async function getItemBasis(itemId: string, opts: { allowAi: boolean }): 
     return { basis: rec.basis, record: rec, aiNote: llm ? null : "AI estimation is not configured — showing a template estimate." };
   }
 
-  const template = templateBasis(item.name, item.description ?? "");
+  const template = templateBasis(item.name, item.description ?? "", "template", restaurantKind(restaurant));
   if (opts.allowAi && llm) {
     if (!rateLimit("llm-global", Number(process.env.AI_REQUESTS_PER_MINUTE || 10), 5)) {
       const r = fresh ? rec : await storeRecord(item, template);

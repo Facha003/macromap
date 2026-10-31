@@ -11,6 +11,20 @@ const NOISE = /^(popul|most ordered|mest bestilt|populære|anbefalt|recommended|
 
 // A comma between digits ("0,5 l") is a decimal, not a list separator.
 const hasListComma = (l: string) => /,(?!\d)/.test(l);
+// Words that may sit next to prices on a price-only line ("Takeaway: 209,- Spise her: 224,-", "Liten 129 / Stor 189").
+const PRICE_LABELS = /\b(takeaway|take away|ta med|spise her|eat in|dine in|liten|stor|small|large|medium|mellom|halv|hel|half|whole|fra|from|pris|price|per|pr|stk|pcs|barn|voksen|lunsj|middag|kr|nok)\b|[:/|,.\-–()]/gi;
+
+/** Price of a line that contains only price(s) and labels, else null. Takes the first price. */
+function priceLineValue(l: string): number | null {
+  if (PRICE_ONLY.test(l)) return priceOf(l);
+  const nums = l.match(/\d{2,4}(?:[.,]\d{1,2})?/g);
+  if (!nums || !/kr|,-|nok|takeaway|spise her|liten|stor|small|large/i.test(l)) return null;
+  const rest = l.replace(/\d{2,4}(?:[.,]\d{1,2})?/g, " ").replace(PRICE_LABELS, " ").trim();
+  if (rest.length > 0) return null;
+  const v = Number(nums[0].replace(",", "."));
+  return v >= 20 && v < 2000 ? v : null;
+}
+
 const isDescription = (l: string) => l.length > 45 || hasListComma(l) || /^[a-zæøå(]/.test(l) || /\b(med|with|and|og|served|servert)\b/i.test(l);
 
 function priceOf(l: string): number | null {
@@ -31,13 +45,14 @@ export function parseMenuText(text: string, limit = 80): ParsedDish[] {
     .map((l) => l.replace(/\s+/g, " ").trim())
     .filter((l) => l.length > 1 && !NOISE.test(l));
   const dishes: ParsedDish[] = [];
-  const hasPrices = lines.some((l) => PRICE_ONLY.test(l) || (priceOf(l) !== null && /kr|,-|nok/i.test(l)));
+  const hasPrices = lines.some((l) => priceLineValue(l) !== null || (priceOf(l) !== null && /kr|,-|nok/i.test(l)));
 
   if (hasPrices) {
     let buffer: string[] = [];
     for (const line of lines) {
-      if (PRICE_ONLY.test(line)) {
-        pushFromBuffer(buffer, priceOf(line));
+      const linePrice = priceLineValue(line);
+      if (linePrice !== null) {
+        pushFromBuffer(buffer, linePrice);
         buffer = [];
       } else if (/(kr|,-|nok)\s*$/i.test(line) && priceOf(line) !== null && line.replace(PRICE, "").trim().length > 1) {
         // "Chicken wrap 159 kr" — name and price on one line.

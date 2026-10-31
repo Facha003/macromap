@@ -13,7 +13,7 @@ import { FOOD_ATTRIBUTION, FOODS_RETRIEVED_AT } from "@/lib/nutrition/estimate";
 import { buildPrompt, extractJson, interpretationToBasis } from "@/lib/nutrition/llm";
 import { DEFAULT_OVERPASS_ENDPOINTS, fetchOverpass, overpassQuery } from "@/lib/osm";
 import { tilesForRadius, tileKey, type PlaceSearchRow, type PlaceTileRow, type PlacesIndex } from "@/lib/placeTiles";
-import { parseTypicalId, typicalDish, typicalDishesFor, typicalId } from "@/lib/typicalDishes";
+import { parseTypicalId, restaurantKind, typicalDish, typicalDishesFor, typicalId } from "@/lib/typicalDishes";
 import { findMenuWithGemini } from "@/lib/menuFinder";
 import { menuFileName, parseWebDishId, webDishId, type MenuIndex, type WebsiteMenu } from "@/lib/websiteMenuTypes";
 import { parseMealQuery } from "@/lib/queryParser";
@@ -333,7 +333,8 @@ const textHash = (i: Item) => `${i.name}|${i.description ?? ""}|2`;
 function basisFor(item: Item): { basis: EstimateBasis; model: string | null } {
   const ai = load<Record<string, AiRecord>>("ai", {})[item.id];
   if (ai && ai.hash === textHash(item)) return { basis: ai.basis, model: ai.model };
-  return { basis: templateBasis(item.name, item.description ?? ""), model: null };
+  const place = findPlace(item.restaurantId);
+  return { basis: templateBasis(item.name, item.description ?? "", "template", place ? restaurantKind(place) : null), model: null };
 }
 
 function toView(item: Item): MealView | null {

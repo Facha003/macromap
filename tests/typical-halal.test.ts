@@ -19,7 +19,8 @@ describe("typical dishes", () => {
     expect(restaurantKind({ name: "Luigi", cuisines: ["italian"] })).toBe("pizza");
     expect(restaurantKind({ name: "Kaffebrenneriet", cuisines: [] })).toBe("cafe");
     expect(restaurantKind({ name: "Smith & Co", cuisines: [], amenity: "cafe" })).toBe("cafe");
-    expect(restaurantKind({ name: "Smith & Co", cuisines: ["indian"] })).toBeNull();
+    expect(restaurantKind({ name: "Smith & Co", cuisines: ["indian"] })).toBe("indian");
+    expect(restaurantKind({ name: "Smith & Co", cuisines: ["ethiopian"] })).toBeNull();
   });
 
   it("round-trips ids even though restaurant ids contain colons", () => {

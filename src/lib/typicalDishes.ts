@@ -3,7 +3,7 @@
  * for that kind of place — clearly labelled in the UI as NOT the restaurant's
  * menu — so every restaurant shows something useful while its real menu is missing.
  */
-export type RestaurantKind = "kebab" | "pizza" | "burger" | "sushi" | "asian" | "cafe" | "boba" | "salad";
+export type RestaurantKind = "kebab" | "pizza" | "burger" | "sushi" | "asian" | "cafe" | "boba" | "salad" | "indian" | "mexican";
 
 export interface TypicalDish {
   slug: string;
@@ -20,6 +20,8 @@ const KIND_LABEL: Record<RestaurantKind, string> = {
   cafe: "cafés",
   boba: "bubble tea shops",
   salad: "salad bars",
+  indian: "Indian restaurants",
+  mexican: "Mexican restaurants",
 };
 
 const DISHES: Record<RestaurantKind, TypicalDish[]> = {
@@ -71,6 +73,20 @@ const DISHES: Record<RestaurantKind, TypicalDish[]> = {
     { slug: "brown-sugar", name: "Brown sugar milk tea", description: "Fresh milk, brown sugar syrup and tapioca pearls" },
     { slug: "fruit", name: "Fruit tea with pearls", description: "Green tea, passion fruit, with pearls" },
   ],
+  indian: [
+    { slug: "tikka-masala", name: "Chicken tikka masala", description: "Chicken in a creamy tomato masala sauce, served with rice" },
+    { slug: "butter-chicken", name: "Butter chicken", description: "Chicken in a mild creamy tomato sauce, served with rice" },
+    { slug: "lamb-curry", name: "Lamb curry", description: "Lamb in a spiced tomato curry, served with rice" },
+    { slug: "dal", name: "Dal", description: "Lentil curry, served with rice" },
+    { slug: "tandoori", name: "Tandoori chicken", description: "Chicken grilled in the tandoor with yoghurt marinade" },
+    { slug: "naan", name: "Garlic naan", description: "Naan with garlic butter" },
+  ],
+  mexican: [
+    { slug: "tacos", name: "Beef tacos (3)", description: "Three soft tortillas with beef, cheese, sour cream and salsa" },
+    { slug: "burrito", name: "Chicken burrito", description: "Chicken, rice, beans, cheese, sour cream and salsa" },
+    { slug: "quesadilla", name: "Chicken quesadilla", description: "Tortilla with cheese and chicken" },
+    { slug: "nachos", name: "Nachos", description: "Tortilla chips with cheese, beef, sour cream and jalapeño" },
+  ],
   salad: [
     { slug: "caesar", name: "Chicken caesar salad", description: "Lettuce, grilled chicken, parmesan, croutons, caesar dressing" },
     { slug: "salmon", name: "Salmon salad bowl", description: "Roasted salmon, leafy greens, tomato, avocado, oil & vinegar" },
@@ -79,6 +95,8 @@ const DISHES: Record<RestaurantKind, TypicalDish[]> = {
 };
 
 const BY_CUISINE: [RegExp, RestaurantKind][] = [
+  [/^(indian|pakistani|nepalese|sri_lankan|bangladeshi|tandoori|curry)$/, "indian"],
+  [/^(mexican|tex-mex|tex_mex|burrito|taco|latin_american)$/, "mexican"],
   [/^(kebab|turkish|middle_eastern|lebanese|arab|syrian|persian|afghan|kurdish|shawarma|falafel|greek)$/, "kebab"],
   [/^(pizza|italian|italian_pizza|pasta)$/, "pizza"],
   [/^(burger|american|chicken|barbecue|grill|diner|fish_and_chips)$/, "burger"],
@@ -90,6 +108,8 @@ const BY_CUISINE: [RegExp, RestaurantKind][] = [
 ];
 
 const BY_NAME: [RegExp, RestaurantKind][] = [
+  [/india|tandoori|masala|curry|punjab|nepal|himalaya|bombay|mumbai|delhi|taj\b|mahal/i, "indian"],
+  [/mexic|taco|burrito|cantina|tex.?mex/i, "mexican"],
   [/kebab|kebap|shawarma|shawerma|falafel|döner|dürüm|durum|grill house/i, "kebab"],
   [/pizz/i, "pizza"],
   [/burger/i, "burger"],
