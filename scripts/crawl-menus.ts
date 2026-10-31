@@ -47,10 +47,12 @@ const AI_TOKEN = process.env.GITHUB_TOKEN || "";
 const AI_MODEL = process.env.MENU_AI_MODEL || "openai/gpt-4o-mini";
 let aiBudget = Number(process.env.MENU_AI_BUDGET || 120);
 let aiAvailable = Boolean(AI_TOKEN);
+const aiStats = { calls: 0, ok: 0, httpErrors: {} as Record<string, number>, emptyAfterValidation: 0, badJson: 0, firstError: "" };
 
 async function aiExtract(pageText: string): Promise<ParsedDish[] | null> {
   if (!aiAvailable || aiBudget <= 0) return null;
   aiBudget--;
+  aiStats.calls++;
   try {
     const res = await fetch("https://models.github.ai/inference/chat/completions", {
       method: "POST",
@@ -66,17 +68,30 @@ async function aiExtract(pageText: string): Promise<ParsedDish[] | null> {
       }),
       signal: AbortSignal.timeout(60_000),
     });
-    if (res.status === 429 || res.status === 401 || res.status === 403) {
-      console.warn(`  GitHub Models unavailable (HTTP ${res.status}) — continuing without AI`);
-      aiAvailable = false;
+    const body = await res.text();
+    if (!res.ok) {
+      aiStats.httpErrors[res.status] = (aiStats.httpErrors[res.status] ?? 0) + 1;
+      aiStats.firstError ||= `HTTP ${res.status}: ${body.slice(0, 300)}`;
+      if (res.status === 429 || res.status === 401 || res.status === 403) {
+        console.warn(`  GitHub Models unavailable (HTTP ${res.status}: ${body.slice(0, 200)}) — continuing without AI`);
+        aiAvailable = false;
+      }
       return null;
     }
-    if (!res.ok) return null;
-    const body = await res.text();
-    const json = JSON.parse(body);
-    const content = json?.choices?.[0]?.message?.content ?? "";
-    return validateAiDishes(JSON.parse(content), pageText);
-  } catch {
+    let content = "";
+    try {
+      content = JSON.parse(body)?.choices?.[0]?.message?.content ?? "";
+      const dishes = validateAiDishes(JSON.parse(content), pageText);
+      if (dishes.length) aiStats.ok++;
+      else aiStats.emptyAfterValidation++;
+      return dishes;
+    } catch {
+      aiStats.badJson++;
+      aiStats.firstError ||= `Unreadable reply: ${(content || body).slice(0, 300)}`;
+      return null;
+    }
+  } catch (e) {
+    aiStats.firstError ||= `Request failed: ${(e as Error).message}`;
     return null;
   }
 }
@@ -226,6 +241,7 @@ async function main() {
   writeFileSync(indexPath, JSON.stringify(index));
   const totalFound = Object.values(index).filter((e) => e.status === "found").length;
   console.log(`This run: ${JSON.stringify(counts)}. Menus available in total: ${totalFound}.`);
+  if (AI_TOKEN) console.log(`GitHub Models: ${JSON.stringify(aiStats)}`);
 }
 
 main().catch((e) => {
