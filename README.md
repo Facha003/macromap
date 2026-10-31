@@ -18,6 +18,7 @@ Find restaurant meals near you that fit your calories and macros, with nutrition
 The GitHub Pages version runs entirely in your browser:
 - Restaurants come from a daily OpenStreetMap snapshot of all of Norway, so they appear instantly. Elsewhere, the app looks them up live.
 - Search restaurants by name across all of Norway.
+- Menus are read automatically from restaurants' own websites every night. They're labelled "From their website", with the date checked and a link. See [docs/DATA_STRATEGY.md](docs/DATA_STRATEGY.md).
 - Every restaurant shows something:
   - Places without a menu get typical dishes for their kind of restaurant, clearly labelled "not their menu".
   - You can bring in the real menu with **Find with AI**, which searches the web through Gemini and shows its sources.

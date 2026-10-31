@@ -43,6 +43,22 @@ The public Overpass servers take 30+ seconds per query under load. So the Pages 
 - It's one query per day instead of one per visitor.
 - Outside the snapshot's area, the app falls back to live Overpass lookups.
 
+## Menus read from restaurants' own websites
+
+About 2,900 of the Norwegian restaurants on OpenStreetMap list their own website. Every night, `scripts/crawl-menus.ts` (run by the Pages workflow) checks a few hundred of them, Oslo first. Each site is re-checked every 14 days.
+
+**Rules it follows:**
+- It fetches only the restaurant's own domain, never delivery platforms or social media.
+- It obeys `robots.txt` and identifies itself as `MacroMapBot` with a link to this repository.
+- It makes at most one request per second per site, reads at most 4 pages per site, uses 15 s timeouts, and skips anything over 2 MB.
+
+**How it extracts a menu, in order:**
+1. **schema.org JSON-LD** menu data embedded in the page. This is exact.
+2. **GitHub Models** (free AI inside GitHub Actions, using the built-in token, so no key or quota of your own). It may only return dishes whose names appear in the page text, and anything else is dropped. Each run has a fixed budget, and if the free limit is hit the run continues without AI.
+3. **The rule-based parser**, accepted only when at least 5 priced dishes come out and most of what it found looks like real dish names.
+
+**What gets stored:** each menu keeps its source URL, check date and method. The app labels these dishes "From their website · checked <date>" and links to the source. Sites that are pure JavaScript, PDF-less image menus, or link only to Wolt can't be read; those restaurants keep showing typical dishes.
+
 ## Menus from Wolt, foodora and restaurant websites
 
 MacroMap **does not scrape** Wolt, foodora or any other site:

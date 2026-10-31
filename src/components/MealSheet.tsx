@@ -119,8 +119,12 @@ export function MealSheet({ meal, onClose, initialSelections = {}, isFavorite = 
               This is a generic dish for this kind of restaurant, not something from {meal.restaurant.name}’s menu. Their version, portion and price may differ — use it as a rough guide.
             </p>
           )}
-          {meal.sourceUrl && meal.sourceType === "community" && (
-            <p className="text-xs text-ink-2">Menu source: <a href={meal.sourceUrl} target="_blank" rel="noreferrer" className="underline underline-offset-2">{new URL(meal.sourceUrl).hostname}</a> — check it’s current.</p>
+          {meal.sourceUrl && (meal.sourceType === "community" || meal.sourceType === "website") && (
+            <p className="text-xs text-ink-2">
+              {meal.sourceType === "website" ? "From their website" : "Menu source"}:{" "}
+              <a href={meal.sourceUrl} target="_blank" rel="noreferrer" className="underline underline-offset-2">{new URL(meal.sourceUrl).hostname.replace(/^www\./, "")}</a>
+              {meal.sourceType === "website" ? `, checked ${fmtDate(meal.lastChecked)}` : ""} — check it’s current.
+            </p>
           )}
 
           {aiState === "loading" && (
@@ -217,7 +221,7 @@ export function MealSheet({ meal, onClose, initialSelections = {}, isFavorite = 
                   <span className="tabular w-11 text-center text-sm font-medium">{portion}×</span>
                   <button className="p-2.5" aria-label="Larger portion" onClick={() => setPortion((p) => PORTIONS[Math.min(PORTIONS.length - 1, PORTIONS.indexOf(p) + 1)])}><Plus size={16} /></button>
                 </div>
-                {!(backend.mode === "server" && meal.sourceType === "typical") && <button aria-label={fav ? "Remove from saved" : "Save meal"} aria-pressed={fav} onClick={() => start(async () => setFav(await backend.toggleFavorite(meal.id, sel)))} className="rounded-xl bg-surface-2 p-2.5">
+                {!(backend.mode === "server" && (meal.sourceType === "typical" || meal.sourceType === "website")) && <button aria-label={fav ? "Remove from saved" : "Save meal"} aria-pressed={fav} onClick={() => start(async () => setFav(await backend.toggleFavorite(meal.id, sel)))} className="rounded-xl bg-surface-2 p-2.5">
                   <Heart size={18} className={fav ? "fill-current text-danger" : ""} />
                 </button>}
                 <button aria-label="Compare" aria-pressed={compare.has(meal.id)} onClick={() => compare.toggle({ id: meal.id, selections: sel })} className={`rounded-xl p-2.5 ${compare.has(meal.id) ? "bg-ink text-bg" : "bg-surface-2"}`}>
@@ -357,7 +361,7 @@ function Details({ meal, estimate: e, portion }: { meal: MealView; estimate: Non
         </ul>
       </div>
       <p>
-        Menu {meal.sourceType === "demo" ? "is illustrative demo data" : meal.sourceType === "typical" ? "item is a generic typical dish, not from this restaurant" : meal.sourceType === "community" ? "item added by a user" : "from the restaurant"} · last checked {fmtDate(meal.lastChecked)} · nutrition computed {fmtDate(e.computedAt)}.
+        Menu {meal.sourceType === "demo" ? "is illustrative demo data" : meal.sourceType === "typical" ? "item is a generic typical dish, not from this restaurant" : meal.sourceType === "website" ? "item read automatically from the restaurant’s website" : meal.sourceType === "community" ? "item added by a user" : "from the restaurant"} · last checked {fmtDate(meal.lastChecked)} · nutrition computed {fmtDate(e.computedAt)}.
         {e.status !== "verified" && " Estimates can be wrong — restaurants vary portions and recipes."}
       </p>
     </div>

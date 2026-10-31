@@ -1,7 +1,10 @@
 import "server-only";
 import { and, eq, inArray } from "drizzle-orm";
 import { templateBasis, type EstimateBasis } from "@/lib/nutrition/basis";
+import { readFileSync } from "node:fs";
+import { join } from "node:path";
 import { parseTypicalId, typicalDish, typicalDishesFor, typicalId } from "@/lib/typicalDishes";
+import { menuFileName, parseWebDishId, webDishId, type WebsiteMenu } from "@/lib/websiteMenuTypes";
 import { getDb } from "../db";
 import { menuItems, restaurants } from "../db/schema";
 import { ensureEstimates, latestRecords } from "../nutrition/service";
@@ -16,7 +19,7 @@ export interface MealView {
   category: string | null;
   priceNok: number | null;
   /** typical = generic dish for this kind of restaurant, NOT from its menu */
-  sourceType: "official" | "community" | "demo" | "typical";
+  sourceType: "official" | "community" | "demo" | "typical" | "website";
   sourceUrl: string | null;
   lastChecked: string;
   statedDiet: { vegetarian?: boolean; vegan?: boolean; halal?: boolean };
@@ -57,6 +60,37 @@ export function typicalViews(r: RestaurantLike): MealView[] {
   return t ? t.dishes.map((d) => typicalView(r, d.slug, d.name, d.description, t.label)) : [];
 }
 
+function readWebsiteMenu(restaurantId: string): WebsiteMenu | null {
+  try {
+    return JSON.parse(readFileSync(join(process.cwd(), "public", "menus", `${menuFileName(restaurantId)}.json`), "utf8")) as WebsiteMenu;
+  } catch {
+    return null;
+  }
+}
+
+/** Dishes read from the restaurant's own website by scripts/crawl-menus.ts, if any. */
+export function websiteViews(r: RestaurantLike): MealView[] {
+  const menu = readWebsiteMenu(r.id);
+  if (!menu) return [];
+  return menu.dishes.map((d, n) => ({
+    id: webDishId(r.id, n), name: d.name, description: d.description, category: "From their website", priceNok: d.priceNok, sourceType: "website" as const,
+    sourceUrl: menu.sourceUrl, lastChecked: menu.checkedAt, statedDiet: {}, basis: templateBasis(d.name, d.description ?? ""), estimatedAt: menu.checkedAt, model: null,
+    restaurant: { id: r.id, name: r.name, isDemo: r.isDemo, lat: r.lat, lng: r.lng, cuisines: r.cuisines, halal: r.tags.halal === "yes" || r.tags.halal === "only", halalTag: r.tags.halal ?? null },
+  }));
+}
+
+/** Website or typical dish by its derived id (these aren't stored as menu_items). */
+export async function derivedViewById(id: string): Promise<MealView | null> {
+  const w = parseWebDishId(id);
+  if (w) {
+    const r = await getRestaurant(w.restaurantId);
+    return r ? (websiteViews(r).find((m) => m.id === id) ?? null) : null;
+  }
+  return typicalViewById(id);
+}
+
+const isDerivedId = (id: string) => Boolean(parseTypicalId(id) || parseWebDishId(id));
+
 export async function typicalViewById(id: string): Promise<MealView | null> {
   const t = parseTypicalId(id);
   const r = t && (await getRestaurant(t.restaurantId));
@@ -65,9 +99,9 @@ export async function typicalViewById(id: string): Promise<MealView | null> {
 }
 
 export async function mealViews(where: { restaurantIds?: string[]; itemIds?: string[] }, viewerId?: string): Promise<MealView[]> {
-  if (where.itemIds?.some((id) => parseTypicalId(id))) {
-    const typical = (await Promise.all(where.itemIds.filter((id) => parseTypicalId(id)).map(typicalViewById))).filter((m): m is MealView => m !== null);
-    const real = await mealViews({ ...where, itemIds: where.itemIds.filter((id) => !parseTypicalId(id)) }, viewerId);
+  if (where.itemIds?.some(isDerivedId)) {
+    const typical = (await Promise.all(where.itemIds.filter(isDerivedId).map(derivedViewById))).filter((m): m is MealView => m !== null);
+    const real = await mealViews({ ...where, itemIds: where.itemIds.filter((id) => !isDerivedId(id)) }, viewerId);
     return [...real, ...typical];
   }
   const db = await getDb();

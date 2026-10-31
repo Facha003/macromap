@@ -6,7 +6,7 @@ import { parseMenuText, type ParsedDish } from "@/lib/menuParse";
 import type { FoundMenu } from "@/lib/menuFinder";
 import { containsPork } from "@/lib/halal";
 import { resolveBasis } from "@/lib/nutrition/basis";
-import { fmtNok } from "@/lib/format";
+import { fmtDate, fmtNok } from "@/lib/format";
 import { track } from "@/lib/client/loading";
 import { backend, type NewDish } from "@/lib/client/backend";
 import type { MealView } from "@/server/repo/menu";
@@ -51,6 +51,13 @@ export function MenuList({ meals, favoriteIds, restaurantId, restaurantName, web
         <section key={cat} className="mb-6 mt-6">
           <h2 className="mb-2 text-xs font-semibold uppercase tracking-wider text-ink-3">{cat}</h2>
           {items[0]?.sourceType === "typical" && <p className="-mt-1 mb-2 text-xs text-ink-3">Generic dishes for this kind of restaurant — not from their menu. Prices unknown.</p>}
+          {items[0]?.sourceType === "website" && items[0].sourceUrl && (
+            <p className="-mt-1 mb-2 text-xs text-ink-3">
+              Read automatically from{" "}
+              <a href={items[0].sourceUrl} target="_blank" rel="noreferrer" className="underline underline-offset-2">{new URL(items[0].sourceUrl).hostname.replace(/^www\./, "")}</a>{" "}
+              on {fmtDate(items[0].lastChecked)}. Menus change — check with the restaurant.
+            </p>
+          )}
           <ul className="space-y-2">
             {items.map((m) => (
               <li key={m.id}><MealRow meal={m} onOpen={() => setOpen(m)} /></li>

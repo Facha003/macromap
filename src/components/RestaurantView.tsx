@@ -73,6 +73,9 @@ export function RestaurantView({ id }: { id: string }) {
           </div>
         </section>
       )}
+      {meals.some((m) => m.sourceType === "website") && (
+        <p className="mb-5 rounded-2xl bg-good-soft p-3 text-sm text-good">We found this restaurant’s menu on their own website. Nutrition is estimated per dish from the menu text.</p>
+      )}
       {!r.isDemo && (meals.length === 0 || typicalOnly) && (
         <p className="mb-5 rounded-2xl bg-surface-2 p-4 text-sm text-ink-2">
           {typicalOnly

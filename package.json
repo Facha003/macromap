@@ -17,7 +17,8 @@
     "prebuild": "node scripts/copy-map-worker.mjs",
     "predev": "node scripts/copy-map-worker.mjs",
     "build:static": "node scripts/copy-map-worker.mjs && STATIC_EXPORT=1 next build",
-    "places:build": "tsx scripts/build-places.ts"
+    "places:build": "tsx scripts/build-places.ts",
+    "menus:crawl": "tsx scripts/crawl-menus.ts"
   },
   "dependencies": {
     "@electric-sql/pglite": "^0.5.13",
@@ -29,10 +30,12 @@
     "lucide-react": "^1.66.0",
     "maplibre-gl": "^6.16.0",
     "next": "15.5.28",
+    "node-html-parser": "^9.0.6",
     "postgres": "^4.0.0",
     "react": "19.1.0",
     "react-dom": "19.1.0",
     "server-only": "^0.0.1",
+    "unpdf": "^2.1.0",
     "zod": "^4.6.7"
   },
   "devDependencies": {

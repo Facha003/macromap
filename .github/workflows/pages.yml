@@ -7,11 +7,17 @@ on:
   schedule:
     - cron: "17 3 * * *" # nightly: refresh the restaurant snapshot
   workflow_dispatch:
+    inputs:
+      limit:
+        description: "Max restaurant websites to check for menus"
+        required: false
+        default: "350"
 
 permissions:
   contents: read
   pages: write
   id-token: write
+  models: read # free GitHub Models AI for reading menus
 
 concurrency:
   group: pages
@@ -45,6 +51,26 @@ jobs:
           key: places-${{ github.run_id }}
       - if: steps.places.outcome != 'success'
         run: echo "::warning::Places snapshot failed; deploying the previous snapshot (if any)"
+      # Menus read from restaurants' own websites — refreshed nightly (or on manual runs), reused on pushes.
+      - uses: actions/cache/restore@v4
+        with:
+          path: public/menus
+          key: menus-${{ github.run_id }}
+          restore-keys: menus-
+      - name: Read menus from restaurant websites
+        id: menus
+        if: github.event_name != 'push'
+        continue-on-error: true
+        timeout-minutes: 35
+        run: npm run menus:crawl
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          MENU_CRAWL_LIMIT: ${{ github.event.inputs.limit || '350' }}
+      - if: steps.menus.outcome == 'success'
+        uses: actions/cache/save@v4
+        with:
+          path: public/menus
+          key: menus-${{ github.run_id }}
       - name: Build static site
         run: npm run build:static
         env:

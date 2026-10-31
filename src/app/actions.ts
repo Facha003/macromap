@@ -10,8 +10,9 @@ import { getLlmProvider } from "@/server/nutrition/llm/providers";
 import { placesProvider } from "@/server/places";
 import { getSession, supabaseConfigured, supabaseServer } from "@/server/auth";
 import { getItemBasis } from "@/server/nutrition/service";
-import { deleteOwnDishes, getMenuItem, getRestaurant, mealViews, typicalViewById, typicalViews } from "@/server/repo/menu";
+import { deleteOwnDishes, derivedViewById, getMenuItem, getRestaurant, mealViews, typicalViews, websiteViews } from "@/server/repo/menu";
 import { parseTypicalId } from "@/lib/typicalDishes";
+import { parseWebDishId } from "@/lib/websiteMenuTypes";
 import { templateBasis } from "@/lib/nutrition/basis";
 import * as repo from "@/server/repo/user";
 
@@ -24,14 +25,14 @@ export async function logMeal(input: { menuItemId: string; selections: unknown; 
   const portion = z.number().min(0.1).max(5).parse(input.portion);
   const day = input.day ? daySchema.parse(input.day) : todayISO();
 
-  // Typical (generic) dishes aren't stored as menu items; rebuild them from the id.
-  if (parseTypicalId(input.menuItemId)) {
-    const meal = await typicalViewById(input.menuItemId);
+  // Typical and website dishes aren't stored as menu items; rebuild them from the id.
+  if (parseTypicalId(input.menuItemId) || parseWebDishId(input.menuItemId)) {
+    const meal = await derivedViewById(input.menuItemId);
     const est = meal && resolveBasis(templateBasis(meal.name, meal.description ?? ""), selections).estimate;
     if (!meal || !est) throw new Error("Meal not found");
     const tv = est.values;
     await repo.addEntry({
-      userId, day, menuItemId: null, restaurantId: meal.restaurant.id, name: `${meal.name} (typical)`, restaurantName: meal.restaurant.name,
+      userId, day, menuItemId: null, restaurantId: meal.restaurant.id, name: meal.sourceType === "typical" ? `${meal.name} (typical)` : meal.name, restaurantName: meal.restaurant.name,
       selections, portion, status: est.status, provider: est.provider, kcal: tv.kcal.likely, kcalMin: tv.kcal.min, kcalMax: tv.kcal.max,
       protein: tv.protein.likely, proteinMin: tv.protein.min, proteinMax: tv.protein.max, carbs: tv.carbs.likely, fat: tv.fat.likely, fiber: tv.fiber?.likely ?? null,
     });
@@ -165,7 +166,7 @@ export async function getRestaurantPage(id: string): Promise<RestaurantPageData 
   const [real, favs, saved] = await Promise.all([mealViews({ restaurantIds: [r.id] }, userId), repo.listFavorites(userId), repo.listSavedRestaurants(userId)]);
   return {
     restaurant: { id: r.id, name: r.name, provider: r.provider, providerId: r.providerId, isDemo: r.isDemo, cuisines: r.cuisines, amenity: r.amenity, address: r.address, lat: r.lat, lng: r.lng, tags: r.tags },
-    meals: real.length ? real : typicalViews(r),
+    meals: real.length || websiteViews(r).length ? [...websiteViews(r), ...real] : typicalViews(r),
     favoriteIds: favs.map((f) => f.menuItemId),
     saved: saved.some((s) => s.restaurantId === r.id),
     aiEnabled: Boolean(getLlmProvider()),

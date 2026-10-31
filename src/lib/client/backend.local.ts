@@ -15,6 +15,7 @@ import { DEFAULT_OVERPASS_ENDPOINTS, fetchOverpass, overpassQuery } from "@/lib/
 import { tilesForRadius, tileKey, type PlaceSearchRow, type PlaceTileRow, type PlacesIndex } from "@/lib/placeTiles";
 import { parseTypicalId, typicalDish, typicalDishesFor, typicalId } from "@/lib/typicalDishes";
 import { findMenuWithGemini } from "@/lib/menuFinder";
+import { menuFileName, parseWebDishId, webDishId, type MenuIndex, type WebsiteMenu } from "@/lib/websiteMenuTypes";
 import { parseMealQuery } from "@/lib/queryParser";
 import type { GoalType } from "@/lib/scoring";
 import { filtersFromParams, rankMeals } from "@/lib/searchCore";
@@ -75,7 +76,7 @@ interface Item {
   description: string | null;
   category: string | null;
   priceNok: number | null;
-  sourceType: "official" | "community" | "demo" | "typical";
+  sourceType: "official" | "community" | "demo" | "typical" | "website";
   sourceUrl?: string | null;
   statedDiet: { vegetarian?: boolean; vegan?: boolean; halal?: boolean };
   createdAt: string;
@@ -149,9 +150,48 @@ function findPlace(id: string): Place | undefined {
   return DEMO_PLACES.find((p) => p.id === id) ?? places()[id];
 }
 
-/** Real menu items for a place; if it has none, generic "typical" dishes for its kind of restaurant. */
+// ── menus read from restaurants' own websites (see scripts/crawl-menus.ts) ──
+let menuIndexPromise: Promise<MenuIndex> | null = null;
+const webMenus = new Map<string, WebsiteMenu | null>();
+
+function menuIndex(): Promise<MenuIndex> {
+  menuIndexPromise ??= fetch(`${process.env.NEXT_PUBLIC_BASE_PATH ?? ""}/menus/index.json`)
+    .then((r) => (r.ok ? (r.json() as Promise<MenuIndex>) : {}))
+    .catch(() => ({}));
+  return menuIndexPromise;
+}
+
+/** Loads website menus for these restaurants (only those the index says exist). */
+async function loadWebsiteMenus(restaurantIds: string[]) {
+  const index = await menuIndex();
+  const todo = restaurantIds.filter((id) => index[id]?.status === "found" && !webMenus.has(id));
+  await Promise.all(
+    todo.map(async (id) => {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_BASE_PATH ?? ""}/menus/${menuFileName(id)}.json`).catch(() => null);
+      webMenus.set(id, res && res.ok ? ((await res.json()) as WebsiteMenu) : null);
+    }),
+  );
+}
+
+function websiteItems(place: Place): Item[] {
+  const menu = webMenus.get(place.id);
+  if (!menu) return [];
+  return menu.dishes.map((d, n) => ({
+    id: webDishId(place.id, n), restaurantId: place.id, name: d.name, description: d.description, category: "From their website",
+    priceNok: d.priceNok, sourceType: "website" as const, sourceUrl: menu.sourceUrl, statedDiet: {}, createdAt: menu.checkedAt,
+  }));
+}
+
+/** Makes items with derived ids (website/typical) resolvable before findItem(). */
+async function prepareIds(ids: string[]) {
+  const restaurantIds = ids.map((id) => parseWebDishId(id)?.restaurantId ?? parseTypicalId(id)?.restaurantId).filter((x): x is string => !!x);
+  await Promise.all(restaurantIds.map(ensurePlace));
+  await loadWebsiteMenus(restaurantIds);
+}
+
+/** Website menu + dishes added by the user; if neither exists, generic "typical" dishes for its kind of restaurant. */
 function itemsForPlace(place: Place): Item[] {
-  const real = allItems().filter((i) => i.restaurantId === place.id);
+  const real = [...websiteItems(place), ...allItems().filter((i) => i.restaurantId === place.id)];
   if (real.length) return real;
   const t = typicalDishesFor(place);
   if (!t) return [];
@@ -164,6 +204,11 @@ function itemsForPlace(place: Place): Item[] {
 function findItem(id: string): Item | undefined {
   const real = allItems().find((i) => i.id === id);
   if (real) return real;
+  const w = parseWebDishId(id);
+  if (w) {
+    const place = findPlace(w.restaurantId);
+    return place ? websiteItems(place).find((i) => i.id === id) : undefined;
+  }
   const t = parseTypicalId(id);
   const place = t && findPlace(t.restaurantId);
   const found = place && typicalDish(place, t.slug);
@@ -372,6 +417,7 @@ export const backend: Backend = {
 
     const showDemo = profile().showDemo;
     const items = allItems();
+    const webIndex = await menuIndex();
     const merged = new Map<string, Place>();
     // Later sources win: stored places keep their pinned flag over the snapshot copy.
     for (const p of [...extra, ...Object.values(places()), ...(showDemo ? DEMO_PLACES : [])]) merged.set(p.id, p);
@@ -380,7 +426,9 @@ export const backend: Backend = {
       .filter((x) => x.d <= radius);
     const coverage = (id: string) => {
       const its = items.filter((i) => i.restaurantId === id);
-      return { menuCount: its.length, estimatedCount: its.filter((i) => basisFor(i).basis.kind !== "unavailable").length, verifiedCount: 0 };
+      const web = webIndex[id]?.status === "found" ? webIndex[id].dishes : 0;
+      // Website dishes are counted from the index (estimated when opened).
+      return { menuCount: its.length + web, estimatedCount: its.filter((i) => basisFor(i).basis.kind !== "unavailable").length + web, verifiedCount: 0 };
     };
     const list: RestaurantCardData[] = candidates
       .map(({ r, d }) => ({ id: r.id, name: r.name, lat: r.lat, lng: r.lng, address: r.address, cuisines: r.cuisines, amenity: r.amenity, isDemo: r.isDemo, distanceM: d, tags: r.tags as RestaurantCardData["tags"], ...coverage(r.id) }))
@@ -416,6 +464,7 @@ export const backend: Backend = {
     const radius = filters.maxDistanceKm ? filters.maxDistanceKm * 1000 : Math.min(5000, Number(p.get("radius")) || 3000);
     const found = await backend.places(lat, lng, radius);
     const withMenus = new Set(found.restaurants.filter((r) => r.menuCount > 0).map((r) => r.id));
+    await loadWebsiteMenus([...withMenus]);
     // Real menus where we have them, typical dishes for everything else.
     const meals = found.restaurants
       .map((r) => findPlace(r.id))
@@ -436,10 +485,12 @@ export const backend: Backend = {
   },
 
   async meals(ids) {
+    await prepareIds(ids);
     return ids.map(findItem).filter((i): i is Item => !!i).map(toView).filter((m): m is MealView => m !== null);
   },
 
   async estimate(itemId, allowAi) {
+    await prepareIds([itemId]);
     const item = findItem(itemId);
     if (!item) throw new Error("Meal not found");
     const current = basisFor(item);
@@ -463,6 +514,7 @@ export const backend: Backend = {
   async restaurant(id) {
     const r = await ensurePlace(id);
     if (!r) return null;
+    await loadWebsiteMenus([r.id]);
     return {
       restaurant: { id: r.id, name: r.name, provider: r.provider, providerId: r.providerId, isDemo: r.isDemo, cuisines: r.cuisines, amenity: r.amenity, address: r.address, lat: r.lat, lng: r.lng, tags: r.tags },
       meals: itemsForPlace(r).map(toView).filter((m): m is MealView => m !== null),
@@ -512,6 +564,7 @@ export const backend: Backend = {
   },
 
   async logMeal({ menuItemId, selections, portion, day }) {
+    await prepareIds([menuItemId]);
     const item = findItem(menuItemId);
     if (!item) throw new Error("Meal not found");
     const { estimate } = resolveBasis(basisFor(item).basis, selections);

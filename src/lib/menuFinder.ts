@@ -30,8 +30,9 @@ export async function findMenuWithGemini(opts: {
 }): Promise<FoundMenu> {
   const r = opts.restaurant;
   const where = r.address ? `${r.address}, Norway` : `near coordinates ${r.lat.toFixed(4)}, ${r.lng.toFixed(4)} in Norway`;
-  const prompt = `Find the CURRENT menu of the restaurant "${r.name}" located at ${where}.${r.cuisines.length ? ` Cuisine: ${r.cuisines.join(", ")}.` : ""}${r.website ? ` Their website: ${r.website}.` : ""}
-Search the web (the restaurant's own website, Wolt, foodora, Just Eat, TripAdvisor, Google). Make sure the menu belongs to this exact restaurant at this location, not a different restaurant with a similar name.
+  const prompt = `Find the CURRENT menu of the restaurant "${r.name}" located at ${where}.${r.cuisines.length ? ` Cuisine: ${r.cuisines.join(", ")}.` : ""}${r.website ? `
+First read their own website: ${r.website} (and its menu pages).` : ""}
+Then search the web (the restaurant's own website, Wolt, foodora, Just Eat, TripAdvisor, Google). Make sure the menu belongs to this exact restaurant at this location, not a different restaurant with a similar name.
 
 Rules:
 - Only list dishes that actually appear in the sources you found. Never invent dishes, descriptions or prices.
@@ -48,14 +49,15 @@ Reply with JSON only, no other text:
     headers: { "content-type": "application/json", "x-goog-api-key": opts.apiKey },
     body: JSON.stringify({
       contents: [{ role: "user", parts: [{ text: prompt }] }],
-      tools: [{ google_search: {} }],
+      // url_context lets the model read the restaurant's site directly; google_search finds other sources.
+      tools: [{ url_context: {} }, { google_search: {} }],
       generationConfig: { temperature: 0.1 },
     }),
     signal: AbortSignal.timeout(60_000),
   });
   if (!res.ok) {
     const body = await res.text().catch(() => "");
-    throw new Error(res.status === 400 && /API key/i.test(body) ? "The Gemini key isn't valid." : res.status === 429 ? "The free Gemini quota is used up for now — try again later." : `Gemini HTTP ${res.status}`);
+    throw new Error(res.status === 400 && /API key/i.test(body) ? "The Gemini key isn't valid." : res.status === 429 ? "Gemini's free quota is used up for today. Menus we found on restaurant websites are still shown automatically — try AI again tomorrow, or paste the menu." : `Gemini HTTP ${res.status}`);
   }
   const json = await res.json();
   const cand = json?.candidates?.[0];
