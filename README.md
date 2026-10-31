@@ -11,6 +11,16 @@ Find restaurant meals near you that fit your calories and macros, with nutrition
 - **Goals**: cutting / bulking / maintenance / healthy / custom, with suggested targets.
 - **Privacy**: export or delete your data. Location never leaves the browser except as search coordinates.
 
+## Run it on GitHub (no install)
+
+[![Open in GitHub Codespaces](https://github.com/codespaces/badge.svg)](https://codespaces.new/Facha003/macromap?quickstart=1)
+
+Click the badge (or **Code → Codespaces → Create codespace on main**). GitHub installs everything and starts the app; a browser tab opens on the running app after ~2 minutes. If it doesn't, open the **Ports** tab and click the globe next to port 3000.
+
+Optional: add `GEMINI_API_KEY` (and `CONTACT_EMAIL`) as [Codespaces secrets](https://github.com/settings/codespaces) for AI estimates of any dish.
+
+Codespaces is free for a monthly quota of hours on personal accounts and stops automatically when idle. For a permanent public URL, deploy to Vercel + Supabase (below).
+
 ## Quick start
 
 ```bash

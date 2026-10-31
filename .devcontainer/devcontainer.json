@@ -1,0 +1,19 @@
+{
+  "name": "MacroMap",
+  "image": "mcr.microsoft.com/devcontainers/typescript-node:1-22-bookworm",
+  "hostRequirements": { "cpus": 2, "memory": "4gb" },
+  "postCreateCommand": "npm install",
+  "postAttachCommand": { "app": "npm run dev" },
+  "forwardPorts": [3000],
+  "portsAttributes": {
+    "3000": { "label": "MacroMap", "onAutoForward": "openBrowser" }
+  },
+  "secrets": {
+    "GEMINI_API_KEY": { "description": "Optional: free key from https://aistudio.google.com/apikey for AI estimates of any dish" },
+    "CONTACT_EMAIL": { "description": "Optional: contact email sent to OpenStreetMap services (their usage policy asks for one)" }
+  },
+  "customizations": {
+    "codespaces": { "openFiles": ["README.md"] },
+    "vscode": { "extensions": ["bradlc.vscode-tailwindcss", "dbaeumer.vscode-eslint"] }
+  }
+}
