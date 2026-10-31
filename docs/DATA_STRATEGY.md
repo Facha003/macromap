@@ -36,6 +36,25 @@ Estimates also show a **cross-check**: the Matvaretabellen average for a compara
 - Quantities are **assumed**: portion size, sauce amount, oil. They're shown with an "assumed" tag until the user answers.
 - Diet flags come from the restaurant where available. Otherwise vegetarian/vegan is inferred from the recipe and labelled as inferred. Halal is never inferred: it requires a restaurant statement (OSM `diet:halal`, or the item's own data).
 
+## Restaurant coverage on GitHub Pages
+
+The public Overpass servers take 30+ seconds per query under load. So the Pages build ships a **daily OpenStreetMap snapshot** of every named restaurant, café, fast-food place, ice-cream shop and food court in Norway (`scripts/build-places.ts`):
+- It's split into ~5.5 km tiles, so the browser loads only the tiles around you and the list appears instantly.
+- It's one query per day instead of one per visitor.
+- Outside the snapshot's area, the app falls back to live Overpass lookups.
+
+## Menus from Wolt, foodora and restaurant websites
+
+MacroMap **does not scrape** Wolt, foodora or any other site:
+- **Their terms forbid it.** Both prohibit automated extraction.
+- **The menu data is licensed.** It belongs to them and the restaurants.
+- **Browsers block it.** Cross-origin rules stop a static site from reading those pages anyway.
+
+Instead:
+- **Links:** every restaurant page links to the restaurant on Wolt, on foodora (via search) and to its own website.
+- **Paste a menu:** the user copies menu text they can see and pastes it in. `src/lib/menuParse.ts` extracts the dish names, descriptions and prices. The user reviews them before importing, and imports are labelled as user-added. Estimates then run per dish, through the AI when a key is set, otherwise the templates.
+- **Real API access** (partner or merchant programmes) would need an agreement with each platform. That belongs on the roadmap, below.
+
 ## Growing coverage realistically
 
 1. **Restaurant-owner portal**: owners claim a listing, upload a menu, and optionally upload lab or recipe-calculated nutrition (Verified).

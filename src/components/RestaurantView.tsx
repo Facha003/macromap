@@ -56,11 +56,11 @@ export function RestaurantView({ id }: { id: string }) {
       )}
       {!r.isDemo && meals.length === 0 && (
         <p className="mb-5 rounded-2xl bg-surface-2 p-4 text-sm text-ink-2">
-          We don’t have this restaurant’s menu yet — most restaurants don’t publish menus in a form apps can use, and we don’t scrape. Add a dish you can see on their menu and we’ll estimate it.
+          We don’t have this restaurant’s menu yet — most restaurants don’t publish menus in a form apps can use, and we don’t scrape. Paste their menu from Wolt, foodora or their website below and we’ll estimate every dish.
         </p>
       )}
 
-      <MenuList meals={meals} favoriteIds={data.favoriteIds} restaurantId={r.id} aiEnabled={data.aiEnabled} onChanged={reload} />
+      <MenuList meals={meals} favoriteIds={data.favoriteIds} restaurantId={r.id} restaurantName={r.name} isDemo={r.isDemo} aiEnabled={data.aiEnabled} onChanged={reload} />
     </div>
   );
 }

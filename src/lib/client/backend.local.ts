@@ -12,6 +12,7 @@ import type { Selections } from "@/lib/nutrition/customize";
 import { FOOD_ATTRIBUTION, FOODS_RETRIEVED_AT } from "@/lib/nutrition/estimate";
 import { buildPrompt, extractJson, interpretationToBasis } from "@/lib/nutrition/llm";
 import { DEFAULT_OVERPASS_ENDPOINTS, fetchOverpass, overpassQuery } from "@/lib/osm";
+import { tilesForRadius, type PlaceTileRow, type PlacesIndex } from "@/lib/placeTiles";
 import { parseMealQuery } from "@/lib/queryParser";
 import type { GoalType } from "@/lib/scoring";
 import { filtersFromParams, rankMeals } from "@/lib/searchCore";
@@ -164,6 +165,15 @@ function storePlaces(list: Omit<Place, "id" | "isDemo" | "seenAt">[]) {
   save("places", all);
 }
 
+/** Persists only places not already stored (keeps localStorage writes small). */
+function rememberPlaces(list: Place[]) {
+  const all = places();
+  const missing = list.filter((p) => !all[p.id]);
+  if (missing.length) {
+    storePlaces(missing.map((p) => ({ provider: p.provider, providerId: p.providerId, name: p.name, lat: p.lat, lng: p.lng, address: p.address, cuisines: p.cuisines, amenity: p.amenity, tags: p.tags })));
+  }
+}
+
 const RADIUS_STEPS = [500, 1000, 2000, 3000, 5000];
 const PLACES_TTL = 24 * 3600_000;
 const inflight = new Map<string, Promise<void>>();
@@ -185,6 +195,41 @@ function refresh(key: string, lat: number, lng: number, radius: number) {
     inflight.set(key, p);
   }
   return p;
+}
+
+// ── pre-built OSM tiles (see scripts/build-places.ts) ─────────────────────
+const BASE = process.env.NEXT_PUBLIC_BASE_PATH ?? "";
+let indexPromise: Promise<PlacesIndex | null> | null = null;
+const tileCache = new Map<string, Promise<PlaceTileRow[]>>();
+
+function placesIndex(): Promise<PlacesIndex | null> {
+  indexPromise ??= fetch(`${BASE}/places/index.json`)
+    .then((r) => (r.ok ? (r.json() as Promise<PlacesIndex>) : null))
+    .catch(() => null);
+  return indexPromise;
+}
+
+function loadTile(key: string): Promise<PlaceTileRow[]> {
+  let p = tileCache.get(key);
+  if (!p) {
+    p = fetch(`${BASE}/places/${key}.json`).then((r) => (r.ok ? (r.json() as Promise<PlaceTileRow[]>) : []), () => []);
+    tileCache.set(key, p);
+  }
+  return p;
+}
+
+/** Places from the static snapshot, or null when the point is outside it. */
+async function placesFromTiles(lat: number, lng: number, radiusM: number) {
+  const index = await placesIndex();
+  if (!index) return null;
+  const [minLat, minLng, maxLat, maxLng] = index.bbox;
+  if (lat < minLat - 0.1 || lat > maxLat + 0.1 || lng < minLng - 0.2 || lng > maxLng + 0.2) return null;
+  const keys = tilesForRadius(lat, lng, radiusM).filter((k) => index.tiles[k]);
+  const rows = (await Promise.all(keys.map(loadTile))).flat();
+  return {
+    generatedAt: index.generatedAt,
+    places: rows.map(([providerId, name, plat, plng, cuisines, amenity, address, tags]) => ({ provider: "osm", providerId, name, lat: plat, lng: plng, cuisines, amenity, address, tags })),
+  };
 }
 
 // ── nutrition ─────────────────────────────────────────────────────────────
@@ -259,8 +304,15 @@ export const backend: Backend = {
     const key = `${cellLat},${cellLng}:${radius}`;
     let pending = false;
     let liveError: string | null = null;
+    let snapshotNote = "";
+    let extra: Place[] = [];
+    const fromTiles = await placesFromTiles(lat, lng, radius);
     const fetchedAt = load<Record<string, number>>("placesCache", {})[key];
-    if (!fetchedAt || Date.now() - fetchedAt > PLACES_TTL) {
+    if (fromTiles) {
+      // Instant: daily OpenStreetMap snapshot shipped with the site.
+      extra = fromTiles.places.map((p) => ({ ...p, id: `osm:${p.providerId}`, isDemo: false, seenAt: Date.now() }));
+      snapshotNote = ` · snapshot ${new Date(fromTiles.generatedAt).toLocaleDateString("en-GB", { day: "numeric", month: "short" })}`;
+    } else if (!fetchedAt || Date.now() - fetchedAt > PLACES_TTL) {
       const p = refresh(key, cellLat, cellLng, radius + 400);
       const settled = await Promise.race([p.then(() => true), new Promise<false>((r) => setTimeout(() => r(false), 4000))]);
       pending = !settled;
@@ -270,7 +322,10 @@ export const backend: Backend = {
 
     const showDemo = profile().showDemo;
     const items = allItems();
-    const candidates = [...(showDemo ? DEMO_PLACES : []), ...Object.values(places())]
+    const merged = new Map<string, Place>();
+    // Later sources win: stored places keep their pinned flag over the snapshot copy.
+    for (const p of [...extra, ...Object.values(places()), ...(showDemo ? DEMO_PLACES : [])]) merged.set(p.id, p);
+    const candidates = [...merged.values()]
       .map((r) => ({ r, d: haversineM({ lat, lng }, r) }))
       .filter((x) => x.d <= radius);
     const coverage = (id: string) => {
@@ -280,9 +335,11 @@ export const backend: Backend = {
     const list: RestaurantCardData[] = candidates
       .map(({ r, d }) => ({ id: r.id, name: r.name, lat: r.lat, lng: r.lng, address: r.address, cuisines: r.cuisines, amenity: r.amenity, isDemo: r.isDemo, distanceM: d, tags: r.tags as RestaurantCardData["tags"], ...coverage(r.id) }))
       .sort((a, b) => Number(b.menuCount > 0) - Number(a.menuCount > 0) || a.distanceM - b.distanceM)
-      .slice(0, 400)
+      .slice(0, 2000)
       .sort((a, b) => a.distanceM - b.distanceM);
-    return { restaurants: list, attribution: "© OpenStreetMap contributors (ODbL)", liveError, pending };
+    // Remember what was shown so restaurant pages (/r/?id=…) can find it later.
+    if (extra.length) rememberPlaces(list.filter((r) => !r.isDemo).map((r) => merged.get(r.id)!));
+    return { restaurants: list, attribution: `© OpenStreetMap contributors (ODbL)${snapshotNote}`, liveError, pending };
   },
 
   async geocode(q) {
@@ -369,6 +426,20 @@ export const backend: Backend = {
     };
     save("community", [...load<Item[]>("community", []), item]);
     await backend.estimate(item.id, true).catch(() => {});
+  },
+
+  async addDishes(restaurantId, input) {
+    const place = findPlace(restaurantId);
+    if (!place) throw new Error("Restaurant not found");
+    if (!place.isDemo) save("places", { ...places(), [place.id]: { ...place, pinned: true } });
+    const existing = new Set(allItems().filter((i) => i.restaurantId === restaurantId).map((i) => i.name.toLowerCase()));
+    const now = new Date().toISOString();
+    const fresh: Item[] = input
+      .filter((d) => d.name.trim().length >= 2 && !existing.has(d.name.trim().toLowerCase()))
+      .slice(0, 80)
+      .map((d) => ({ id: `local:${uid()}`, restaurantId, name: d.name.trim().slice(0, 120), description: d.description?.trim().slice(0, 500) || null, category: "Added by you", priceNok: d.priceNok, sourceType: "community", statedDiet: {}, createdAt: now }));
+    save("community", [...load<Item[]>("community", []), ...fresh]);
+    return fresh.length;
   },
 
   async logMeal({ menuItemId, selections, portion, day }) {

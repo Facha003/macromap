@@ -16,7 +16,8 @@ Find restaurant meals near you that fit your calories and macros, with nutrition
 **https://facha003.github.io/macromap/**
 
 The GitHub Pages version runs entirely in your browser:
-- Restaurants come straight from OpenStreetMap.
+- Restaurants come from a daily OpenStreetMap snapshot of all of Norway, so they appear instantly. Elsewhere, the app looks them up live.
+- Any restaurant can get a menu: paste the menu text you copied from Wolt, foodora or the restaurant's site, and every dish is extracted for you to review.
 - Nutrition uses the same estimation engine.
 - Your diary, goals and saved items stay in your browser's storage.
 - AI estimates are optional: paste a free Gemini key in **Profile**.

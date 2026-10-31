@@ -138,7 +138,7 @@ export async function discover(lat: number, lng: number, radiusM: number, opts: 
   // Cap the list size, but never drop a restaurant we have nutrition data for.
   const withDist = inRadius
     .sort((a, b) => Number(coverage.has(b.r.id)) - Number(coverage.has(a.r.id)) || a.d - b.d)
-    .slice(0, 400)
+    .slice(0, 2000)
     .sort((a, b) => a.d - b.d);
 
   return {

@@ -70,6 +70,8 @@ export interface Backend {
   estimate(itemId: string, allowAi: boolean): Promise<{ basis: EstimateBasis; aiNote: string | null }>;
   restaurant(id: string): Promise<RestaurantPageData | null>;
   addDish(restaurantId: string, input: { name: string; description?: string; priceNok: number | null }): Promise<void>;
+  /** Bulk import from a pasted menu; estimates run lazily when each dish is opened. */
+  addDishes(restaurantId: string, items: { name: string; description: string | null; priceNok: number | null }[]): Promise<number>;
   logMeal(input: { menuItemId: string; selections: Selections; portion: number; day: string }): Promise<{ kcal: number }>;
   setEntryPortion(id: string, portion: number): Promise<void>;
   deleteEntry(id: string): Promise<void>;

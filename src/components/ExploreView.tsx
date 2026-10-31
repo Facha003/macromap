@@ -28,6 +28,7 @@ export function ExploreView() {
   const [error, setError] = useState<string | null>(null);
   const [filter, setFilter] = useState("");
   const [onlyWithData, setOnlyWithData] = useState(false);
+  const [shown, setShown] = useState(100);
 
   useEffect(() => {
     if (!location) return;
@@ -143,9 +144,16 @@ export function ExploreView() {
         <div className="space-y-2">{Array.from({ length: 6 }, (_, i) => <div key={i} className="h-[84px] animate-pulse rounded-[20px] bg-surface-2" />)}</div>
       ) : (
         <ul className="space-y-2">
-          {list.slice(0, 120).map((r) => (
+          {list.slice(0, shown).map((r) => (
             <li key={r.id}><RestaurantCard r={r} /></li>
           ))}
+          {list.length > shown && (
+            <li>
+              <button onClick={() => setShown((n) => n + 200)} className="w-full rounded-[20px] border border-line py-3 text-sm font-medium text-ink-2 hover:text-ink">
+                Show more ({list.length - shown} more places)
+              </button>
+            </li>
+          )}
           {!loading && list.length === 0 && <li className="card p-6 text-center text-sm text-ink-2">No places match. Try a larger radius.</li>}
         </ul>
       )}

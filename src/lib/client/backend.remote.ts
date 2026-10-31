@@ -21,6 +21,8 @@ export const backend: Backend = {
   addDish: async (rid, input) => {
     await json(await fetch(`/api/restaurants/${encodeURIComponent(rid)}/items`, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(input) }));
   },
+  addDishes: async (rid, items) =>
+    (await json<{ added: number }>(await fetch(`/api/restaurants/${encodeURIComponent(rid)}/items`, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ items }) }))).added,
   logMeal: (i) => actions.logMeal(i),
   setEntryPortion: (id, p) => actions.setEntryPortion(id, p),
   deleteEntry: (id) => actions.deleteEntryAction(id),
