@@ -69,14 +69,14 @@ jobs:
         id: menus
         if: github.event_name != 'push'
         continue-on-error: true
-        timeout-minutes: 55
+        timeout-minutes: 170
         run: npm run menus:crawl
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           MENU_CRAWL_LIMIT: ${{ github.event.inputs.limit || '600' }}
           MENU_RECHECK: ${{ github.event.inputs.recheck || '' }}
           MENU_RENDER: "1"
-          MENU_CRAWL_MINUTES: ${{ github.event_name == 'workflow_dispatch' && '45' || '25' }}
+          MENU_CRAWL_MINUTES: ${{ github.event_name == 'workflow_dispatch' && '150' || '30' }}
       - if: steps.menus.outcome == 'success'
         uses: actions/cache/save@v4
         with:
