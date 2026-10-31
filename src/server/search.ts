@@ -3,7 +3,7 @@ import type { MealFilters } from "@/lib/queryParser";
 import { rankMeals, type SearchResponse } from "@/lib/searchCore";
 import type { Goals, Totals } from "@/lib/scoring";
 import { discover } from "./places";
-import { mealViews } from "./repo/menu";
+import { mealViews, typicalViews } from "./repo/menu";
 
 export type { MealResult, SearchResponse } from "@/lib/searchCore";
 
@@ -20,7 +20,11 @@ export async function searchMeals(args: {
   const radius = Math.min(args.radiusM, (args.filters.maxDistanceKm ?? 99) * 1000);
   const found = await discover(args.lat, args.lng, radius, { showDemo: args.showDemo });
   const withMenus = found.restaurants.filter((r) => r.menuCount > 0);
-  const meals = await mealViews({ restaurantIds: withMenus.map((r) => r.id) });
+  // Real menus where we have them, typical dishes for every other restaurant.
+  const meals = [
+    ...(await mealViews({ restaurantIds: withMenus.map((r) => r.id) })),
+    ...found.restaurants.filter((r) => r.menuCount === 0).flatMap((r) => typicalViews(r)),
+  ];
   return {
     ...rankMeals({ ...args, meals, restaurants: found.restaurants }),
     scanned: { restaurants: found.restaurants.length, withMenus: withMenus.length, meals: meals.length },

@@ -28,6 +28,7 @@ export function osmElementToPlace(e: OverpassElement): PlaceInput | null {
   const address = [street, t["addr:city"]].filter(Boolean).join(", ") || null;
   const tags: RestaurantTags = {
     website: t.website || t["contact:website"] || undefined,
+    menuUrl: t["website:menu"] || t["menu:url"] || t["contact:menu"] || (/^https?:/.test(t.menu ?? "") ? t.menu : undefined),
     phone: t.phone || t["contact:phone"] || undefined,
     openingHours: t.opening_hours || undefined,
     vegetarian: diet(t["diet:vegetarian"]),

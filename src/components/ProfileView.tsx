@@ -2,6 +2,7 @@
 import { useState, useTransition } from "react";
 import { Check, Database, Download, KeyRound, Loader2, LogOut, Mail, ShieldCheck, Sparkles, Trash2 } from "lucide-react";
 import { backend } from "@/lib/client/backend";
+import { useHalal } from "@/lib/client/prefs";
 import { presetTargets, type GoalType } from "@/lib/scoring";
 import { fmtDate } from "@/lib/format";
 import { ThemeToggle } from "./ThemeToggle";
@@ -23,6 +24,7 @@ export function ProfileView({ profile, account, system, onChanged }: { profile: 
   const [pending, start] = useTransition();
   const [email, setEmail] = useState("");
   const [authMsg, setAuthMsg] = useState<string | null>(null);
+  const { halalOnly, setHalalOnly } = useHalal();
 
   const field = (k: "kcalTarget" | "proteinG" | "carbsG" | "fatG", label: string, unit: string) => (
     <label className="block">
@@ -94,6 +96,13 @@ export function ProfileView({ profile, account, system, onChanged }: { profile: 
       <section className="card space-y-4 p-5">
         <h2 className="font-semibold">Display</h2>
         <ThemeToggle />
+        <label className="flex items-start justify-between gap-4">
+          <span>
+            <span className="block text-sm font-medium">Halal only</span>
+            <span className="block text-xs text-ink-2">Show only restaurants tagged halal or likely halal (kebab, Turkish, Middle Eastern…), and hide dishes with pork. “Likely” isn’t confirmed — always ask the restaurant.</span>
+          </span>
+          <input type="checkbox" checked={halalOnly} onChange={(e) => setHalalOnly(e.target.checked)} className="mt-1 h-5 w-5 accent-[var(--ink)]" />
+        </label>
         <label className="flex items-start justify-between gap-4">
           <span>
             <span className="block text-sm font-medium">Show demo restaurants</span>

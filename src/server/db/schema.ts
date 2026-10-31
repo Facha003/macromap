@@ -17,6 +17,8 @@ import type { Per100g } from "@/lib/nutrition/types";
 
 export interface RestaurantTags {
   website?: string;
+  /** Direct link to the menu, when OpenStreetMap has one (website:menu / menu:url). */
+  menuUrl?: string;
   phone?: string;
   openingHours?: string;
   vegetarian?: "yes" | "only" | "no";

@@ -19,6 +19,9 @@ export interface PlacesIndex {
   tiles: Record<string, number>;
 }
 
+/** Compact Norway-wide name index for restaurant search: [osm id, name, lat, lng, cuisines, amenity, diet:halal] */
+export type PlaceSearchRow = [string, string, number, number, string[], string | null, string | null];
+
 export function tileKey(lat: number, lng: number): string {
   return `${Math.floor(lat / TILE_LAT)}_${Math.floor(lng / TILE_LNG)}`;
 }

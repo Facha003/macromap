@@ -12,7 +12,10 @@ export function MealRow({ meal, onOpen, extra }: { meal: MealView; onOpen: () =>
     <button onClick={onOpen} className="card block w-full p-4 text-left transition hover:border-ink-3/40 active:scale-[0.995]">
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0">
-          <h3 className="font-semibold leading-snug tracking-tight">{meal.name}</h3>
+          <h3 className="font-semibold leading-snug tracking-tight">
+            {meal.name}
+            {meal.sourceType === "typical" && <span className="ml-2 rounded-full border border-dashed border-ink-3 px-1.5 py-0.5 align-middle text-[10px] font-medium text-ink-2">Typical · not their menu</span>}
+          </h3>
           {meal.description && <p className="mt-0.5 line-clamp-2 text-xs text-ink-2">{meal.description}</p>}
         </div>
         {meal.priceNok != null && <span className="tabular shrink-0 text-sm text-ink-2">{fmtNok(meal.priceNok)}</span>}

@@ -13,7 +13,7 @@
 import { mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { osmElementToPlace, type OverpassElement } from "../src/lib/osm";
-import { TILE_LAT, TILE_LNG, tileKey, type PlaceTileRow, type PlacesIndex } from "../src/lib/placeTiles";
+import { TILE_LAT, TILE_LNG, tileKey, type PlaceSearchRow, type PlaceTileRow, type PlacesIndex } from "../src/lib/placeTiles";
 
 const COUNTRY = process.env.PLACES_COUNTRY || "NO";
 const ENDPOINTS = ["https://lz4.overpass-api.de/api/interpreter", "https://z.overpass-api.de/api/interpreter", "https://overpass-api.de/api/interpreter"];
@@ -47,6 +47,7 @@ async function main() {
     ? (JSON.parse(readFileSync(process.env.PLACES_INPUT, "utf8")) as { elements: OverpassElement[] }).elements
     : await fetchCountry();
   const tiles = new Map<string, PlaceTileRow[]>();
+  const search: PlaceSearchRow[] = [];
   let minLat = 90, maxLat = -90, minLng = 180, maxLng = -180;
   for (const e of elements) {
     const p = osmElementToPlace(e);
@@ -54,6 +55,7 @@ async function main() {
     const key = tileKey(p.lat, p.lng);
     const row: PlaceTileRow = [p.providerId, p.name, +p.lat.toFixed(6), +p.lng.toFixed(6), p.cuisines, p.amenity, p.address, p.tags];
     (tiles.get(key) ?? tiles.set(key, []).get(key)!).push(row);
+    search.push([p.providerId, p.name, row[2], row[3], p.cuisines, p.amenity, p.tags.halal ?? null]);
     minLat = Math.min(minLat, p.lat); maxLat = Math.max(maxLat, p.lat);
     minLng = Math.min(minLng, p.lng); maxLng = Math.max(maxLng, p.lng);
   }
@@ -70,6 +72,7 @@ async function main() {
     tiles: Object.fromEntries([...tiles].map(([k, v]) => [k, v.length])),
   };
   writeFileSync(join(OUT, "index.json"), JSON.stringify(index));
+  writeFileSync(join(OUT, "search.json"), JSON.stringify(search));
   const total = [...tiles.values()].reduce((s, t) => s + t.length, 0);
   console.log(`Wrote ${total} places in ${tiles.size} tiles to ${OUT}`);
 }

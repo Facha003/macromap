@@ -12,14 +12,16 @@ import type { Selections } from "@/lib/nutrition/customize";
 import { FOOD_ATTRIBUTION, FOODS_RETRIEVED_AT } from "@/lib/nutrition/estimate";
 import { buildPrompt, extractJson, interpretationToBasis } from "@/lib/nutrition/llm";
 import { DEFAULT_OVERPASS_ENDPOINTS, fetchOverpass, overpassQuery } from "@/lib/osm";
-import { tilesForRadius, type PlaceTileRow, type PlacesIndex } from "@/lib/placeTiles";
+import { tilesForRadius, tileKey, type PlaceSearchRow, type PlaceTileRow, type PlacesIndex } from "@/lib/placeTiles";
+import { parseTypicalId, typicalDish, typicalDishesFor, typicalId } from "@/lib/typicalDishes";
+import { findMenuWithGemini } from "@/lib/menuFinder";
 import { parseMealQuery } from "@/lib/queryParser";
 import type { GoalType } from "@/lib/scoring";
 import { filtersFromParams, rankMeals } from "@/lib/searchCore";
 import type { RestaurantTags } from "@/server/db/schema";
 import type { MealView } from "@/server/repo/menu";
 import type { RestaurantCardData } from "@/components/RestaurantCard";
-import type { Backend, DiaryData, PlacesResponse, ProfileData } from "./backendTypes";
+import type { Backend, DiaryData, PlacesResponse, ProfileData, RestaurantHit } from "./backendTypes";
 
 // ── storage ───────────────────────────────────────────────────────────────
 const PREFIX = "mm.v1.";
@@ -73,7 +75,8 @@ interface Item {
   description: string | null;
   category: string | null;
   priceNok: number | null;
-  sourceType: "official" | "community" | "demo";
+  sourceType: "official" | "community" | "demo" | "typical";
+  sourceUrl?: string | null;
   statedDiet: { vegetarian?: boolean; vegan?: boolean; halal?: boolean };
   createdAt: string;
 }
@@ -144,6 +147,28 @@ const profile = () => ({ ...DEFAULT_PROFILE, ...load<Partial<Profile>>("profile"
 
 function findPlace(id: string): Place | undefined {
   return DEMO_PLACES.find((p) => p.id === id) ?? places()[id];
+}
+
+/** Real menu items for a place; if it has none, generic "typical" dishes for its kind of restaurant. */
+function itemsForPlace(place: Place): Item[] {
+  const real = allItems().filter((i) => i.restaurantId === place.id);
+  if (real.length) return real;
+  const t = typicalDishesFor(place);
+  if (!t) return [];
+  return t.dishes.map((d) => ({
+    id: typicalId(place.id, d.slug), restaurantId: place.id, name: d.name, description: d.description, category: `Typical for ${t.label}`,
+    priceNok: null, sourceType: "typical" as const, statedDiet: {}, createdAt: new Date().toISOString(),
+  }));
+}
+
+function findItem(id: string): Item | undefined {
+  const real = allItems().find((i) => i.id === id);
+  if (real) return real;
+  const t = parseTypicalId(id);
+  const place = t && findPlace(t.restaurantId);
+  const found = place && typicalDish(place, t.slug);
+  if (!place || !found) return undefined;
+  return { id, restaurantId: place.id, name: found.dish.name, description: found.dish.description, category: `Typical for ${found.label}`, priceNok: null, sourceType: "typical", statedDiet: {}, createdAt: new Date().toISOString() };
 }
 
 function storePlaces(list: Omit<Place, "id" | "isDemo" | "seenAt">[]) {
@@ -232,6 +257,30 @@ async function placesFromTiles(lat: number, lng: number, radiusM: number) {
   };
 }
 
+let searchPromise: Promise<PlaceSearchRow[]> | null = null;
+function searchIndex(): Promise<PlaceSearchRow[]> {
+  searchPromise ??= fetch(`${BASE}/places/search.json`)
+    .then((r) => (r.ok ? (r.json() as Promise<PlaceSearchRow[]>) : []))
+    .catch(() => []);
+  return searchPromise;
+}
+
+/** Finds a restaurant by id even if it was never shown nearby (e.g. opened from search). */
+async function ensurePlace(id: string): Promise<Place | undefined> {
+  const known = findPlace(id);
+  if (known || !id.startsWith("osm:")) return known;
+  const providerId = id.slice(4);
+  const hit = (await searchIndex()).find((r) => r[0] === providerId);
+  if (!hit) return undefined;
+  const row = (await loadTile(tileKey(hit[2], hit[3]))).find((r) => r[0] === providerId);
+  if (!row) return undefined;
+  const [, name, lat, lng, cuisines, amenity, address, tags] = row;
+  storePlaces([{ provider: "osm", providerId, name, lat, lng, cuisines, amenity, address, tags }]);
+  return findPlace(id);
+}
+
+const fold = (s: string) => s.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/ø/g, "o").replace(/æ/g, "ae").replace(/å/g, "a");
+
 // ── nutrition ─────────────────────────────────────────────────────────────
 interface AiRecord { hash: string; basis: EstimateBasis; model: string | null }
 const textHash = (i: Item) => `${i.name}|${i.description ?? ""}|2`;
@@ -248,9 +297,9 @@ function toView(item: Item): MealView | null {
   const { basis, model } = basisFor(item);
   return {
     id: item.id, name: item.name, description: item.description, category: item.category, priceNok: item.priceNok,
-    sourceType: item.sourceType, sourceUrl: null, lastChecked: item.createdAt, statedDiet: item.statedDiet,
+    sourceType: item.sourceType, sourceUrl: item.sourceUrl ?? null, lastChecked: item.createdAt, statedDiet: item.statedDiet,
     basis, estimatedAt: item.createdAt, model,
-    restaurant: { id: r.id, name: r.name, isDemo: r.isDemo, lat: r.lat, lng: r.lng, cuisines: r.cuisines, halal: r.tags.halal === "yes" || r.tags.halal === "only" },
+    restaurant: { id: r.id, name: r.name, isDemo: r.isDemo, lat: r.lat, lng: r.lng, cuisines: r.cuisines, halal: r.tags.halal === "yes" || r.tags.halal === "only", halalTag: r.tags.halal ?? null },
   };
 }
 
@@ -359,18 +408,24 @@ export const backend: Backend = {
     return results;
   },
 
-  async search(p) {
+  async search(p, halalReports) {
     const filters = filtersFromParams(p, parseMealQuery((p.get("q") ?? "").slice(0, 200)));
     const lat = Number(p.get("lat")) || 59.9139;
     const lng = Number(p.get("lng")) || 10.7522;
     const radius = filters.maxDistanceKm ? filters.maxDistanceKm * 1000 : Math.min(5000, Number(p.get("radius")) || 3000);
     const found = await backend.places(lat, lng, radius);
     const withMenus = new Set(found.restaurants.filter((r) => r.menuCount > 0).map((r) => r.id));
-    const meals = allItems().filter((i) => withMenus.has(i.restaurantId)).map(toView).filter((m): m is MealView => m !== null);
+    // Real menus where we have them, typical dishes for everything else.
+    const meals = found.restaurants
+      .map((r) => findPlace(r.id))
+      .filter((pl): pl is Place => !!pl)
+      .flatMap(itemsForPlace)
+      .map(toView)
+      .filter((m): m is MealView => m !== null);
     const prof = profile();
     const consumed = totalsFor(todayISO());
     return {
-      ...rankMeals({ meals, restaurants: found.restaurants, filters, lat, lng, goals: prof, consumed }),
+      ...rankMeals({ meals, restaurants: found.restaurants, filters, lat, lng, goals: prof, consumed, halalReports }),
       scanned: { restaurants: found.restaurants.length, withMenus: withMenus.size, meals: meals.length },
       liveError: found.liveError,
       pending: found.pending,
@@ -380,14 +435,15 @@ export const backend: Backend = {
   },
 
   async meals(ids) {
-    const items = allItems();
-    return ids.map((id) => items.find((i) => i.id === id)).filter((i): i is Item => !!i).map(toView).filter((m): m is MealView => m !== null);
+    return ids.map(findItem).filter((i): i is Item => !!i).map(toView).filter((m): m is MealView => m !== null);
   },
 
   async estimate(itemId, allowAi) {
-    const item = allItems().find((i) => i.id === itemId);
+    const item = findItem(itemId);
     if (!item) throw new Error("Meal not found");
     const current = basisFor(item);
+    // Typical dishes are generic on purpose — AI adds nothing without the real menu text.
+    if (item.sourceType === "typical") return { basis: current.basis, aiNote: null };
     const isTemplate = current.basis.kind === "unavailable" || ((current.basis.kind === "archetype" || current.basis.kind === "components") && current.basis.provider === "template");
     if (!allowAi || !isTemplate || current.model === "ai-fallback") return { basis: current.basis, aiNote: null };
     if (!load<string>(GEMINI_KEY, "")) return { basis: current.basis, aiNote: "Showing a template estimate. Add a free Gemini key in Profile to analyse any dish with AI." };
@@ -404,11 +460,11 @@ export const backend: Backend = {
   },
 
   async restaurant(id) {
-    const r = findPlace(id);
+    const r = await ensurePlace(id);
     if (!r) return null;
     return {
-      restaurant: { id: r.id, name: r.name, provider: r.provider, providerId: r.providerId, isDemo: r.isDemo, cuisines: r.cuisines, amenity: r.amenity, address: r.address, tags: r.tags },
-      meals: allItems().filter((i) => i.restaurantId === id).map(toView).filter((m): m is MealView => m !== null),
+      restaurant: { id: r.id, name: r.name, provider: r.provider, providerId: r.providerId, isDemo: r.isDemo, cuisines: r.cuisines, amenity: r.amenity, address: r.address, lat: r.lat, lng: r.lng, tags: r.tags },
+      meals: itemsForPlace(r).map(toView).filter((m): m is MealView => m !== null),
       favoriteIds: load<{ menuItemId: string }[]>("favorites", []).map((f) => f.menuItemId),
       saved: load<{ restaurantId: string }[]>("savedRestaurants", []).some((s) => s.restaurantId === id),
       aiEnabled: Boolean(load<string>(GEMINI_KEY, "")),
@@ -437,13 +493,13 @@ export const backend: Backend = {
     const fresh: Item[] = input
       .filter((d) => d.name.trim().length >= 2 && !existing.has(d.name.trim().toLowerCase()))
       .slice(0, 80)
-      .map((d) => ({ id: `local:${uid()}`, restaurantId, name: d.name.trim().slice(0, 120), description: d.description?.trim().slice(0, 500) || null, category: "Added by you", priceNok: d.priceNok, sourceType: "community", statedDiet: {}, createdAt: now }));
+      .map((d) => ({ id: `local:${uid()}`, restaurantId, name: d.name.trim().slice(0, 120), description: d.description?.trim().slice(0, 500) || null, category: d.category || "Added by you", priceNok: d.priceNok, sourceType: "community" as const, sourceUrl: d.sourceUrl ?? null, statedDiet: {}, createdAt: now }));
     save("community", [...load<Item[]>("community", []), ...fresh]);
     return fresh.length;
   },
 
   async logMeal({ menuItemId, selections, portion, day }) {
-    const item = allItems().find((i) => i.id === menuItemId);
+    const item = findItem(menuItemId);
     if (!item) throw new Error("Meal not found");
     const { estimate } = resolveBasis(basisFor(item).basis, selections);
     if (!estimate) throw new Error("This meal has no nutrition estimate to log");
@@ -561,6 +617,33 @@ export const backend: Backend = {
         /* ignore */
       }
     }
+  },
+
+  async searchRestaurants(q, lat, lng) {
+    const terms = fold(q).split(/\s+/).filter(Boolean);
+    if (!terms.length) return [];
+    const match = (name: string, cuisines: string[]) => {
+      const hay = fold(`${name} ${cuisines.join(" ")}`);
+      return terms.every((t) => hay.includes(t));
+    };
+    const hits = new Map<string, RestaurantHit>();
+    for (const p of [...(profile().showDemo ? DEMO_PLACES : []), ...Object.values(places())]) {
+      if (match(p.name, p.cuisines)) hits.set(p.id, { id: p.id, name: p.name, cuisines: p.cuisines, amenity: p.amenity, lat: p.lat, lng: p.lng, distanceM: haversineM({ lat, lng }, p), halalTag: p.tags.halal ?? null });
+    }
+    for (const [providerId, name, plat, plng, cuisines, amenity, halalTag] of await searchIndex()) {
+      const id = `osm:${providerId}`;
+      if (!hits.has(id) && match(name, cuisines)) hits.set(id, { id, name, cuisines, amenity, lat: plat, lng: plng, distanceM: haversineM({ lat, lng }, { lat: plat, lng: plng }), halalTag });
+    }
+    const starts = (h: RestaurantHit) => (fold(h.name).startsWith(terms[0]) ? 0 : 1);
+    return [...hits.values()].sort((a, b) => starts(a) - starts(b) || a.distanceM - b.distanceM).slice(0, 50);
+  },
+
+  async findMenu(restaurantId) {
+    const key = load<string>(GEMINI_KEY, "");
+    if (!key) throw new Error("Add your free Gemini key in Profile to let AI find menus online.");
+    const place = await ensurePlace(restaurantId);
+    if (!place) throw new Error("Restaurant not found");
+    return findMenuWithGemini({ apiKey: key, model: geminiModel(), restaurant: { name: place.name, address: place.address, lat: place.lat, lng: place.lng, cuisines: place.cuisines, website: place.tags.website ?? null } });
   },
 
   async signIn() {

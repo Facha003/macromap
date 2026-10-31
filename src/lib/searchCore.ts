@@ -4,6 +4,7 @@ import { inferDiet } from "./nutrition/diet";
 import type { DataStatus, EstimateProvider, NutritionValues } from "./nutrition/types";
 import type { MealFilters } from "./queryParser";
 import { scoreMeal, type Goals, type Totals } from "./scoring";
+import { containsPork, halalStatus, isHalalOption, type HalalReport, type HalalStatus } from "./halal";
 import type { MealView } from "@/server/repo/menu";
 
 export interface MealResult {
@@ -14,7 +15,7 @@ export interface MealResult {
   distanceM: number;
   score: number;
   reasons: string[];
-  diet: { vegetarian: boolean; vegan: boolean; halal: boolean; inferred: boolean };
+  diet: { vegetarian: boolean; vegan: boolean; halal: HalalStatus; pork: boolean; inferred: boolean };
 }
 
 export interface RestaurantLite {
@@ -51,6 +52,7 @@ export function rankMeals(args: {
   goals: Goals;
   consumed: Totals;
   limit?: number;
+  halalReports?: Record<string, HalalReport>;
 }): Pick<SearchResponse, "results" | "noMenuMatches"> {
   const { filters: f } = args;
   const remaining = Math.max(0, args.goals.kcalTarget - args.consumed.kcal);
@@ -71,19 +73,27 @@ export function rankMeals(args: {
 
     const inferred = inferDiet(estimate.components);
     const stated = meal.statedDiet;
+    const pork = containsPork(estimate.components);
+    const halal = stated.halal
+      ? "confirmed"
+      : halalStatus({ name: meal.restaurant.name, cuisines: meal.restaurant.cuisines, halalTag: meal.restaurant.halalTag ?? (meal.restaurant.halal ? "yes" : null) }, args.halalReports?.[meal.restaurant.id]).status;
     const diet = {
       vegetarian: stated.vegetarian ?? inferred.vegetarian,
       vegan: stated.vegan ?? inferred.vegan,
-      halal: Boolean(stated.halal || meal.restaurant.halal),
+      halal,
+      pork,
       inferred: stated.vegetarian === undefined && stated.vegan === undefined,
     };
     if (f.vegetarian && !diet.vegetarian) continue;
     if (f.vegan && !diet.vegan) continue;
-    if (f.halal && !diet.halal) continue;
+    // Halal: restaurant confirmed or likely halal, and no pork in the dish.
+    if (f.halal && (!isHalalOption(halal) || pork)) continue;
 
     const distanceM = haversineM({ lat: args.lat, lng: args.lng }, meal.restaurant);
     const s = scoreMeal({ values: v, status: estimate.status, distanceM }, args.goals, args.consumed);
-    results.push({ meal, values: v, status: estimate.status, provider: estimate.provider, distanceM, score: s.score, reasons: s.reasons, diet });
+    // Generic "typical" dishes rank below dishes from the restaurant's real menu.
+    const typical = meal.sourceType === "typical";
+    results.push({ meal, values: v, status: estimate.status, provider: estimate.provider, distanceM, score: typical ? Math.round(s.score * 0.85) : s.score, reasons: typical ? ["Typical dish — check their menu", ...s.reasons].slice(0, 3) : s.reasons, diet });
   }
 
   const sorters: Record<NonNullable<MealFilters["sort"]>, (a: MealResult, b: MealResult) => number> = {

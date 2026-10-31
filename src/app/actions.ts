@@ -10,7 +10,9 @@ import { getLlmProvider } from "@/server/nutrition/llm/providers";
 import { placesProvider } from "@/server/places";
 import { getSession, supabaseConfigured, supabaseServer } from "@/server/auth";
 import { getItemBasis } from "@/server/nutrition/service";
-import { getMenuItem, getRestaurant, mealViews } from "@/server/repo/menu";
+import { getMenuItem, getRestaurant, mealViews, typicalViewById, typicalViews } from "@/server/repo/menu";
+import { parseTypicalId } from "@/lib/typicalDishes";
+import { templateBasis } from "@/lib/nutrition/basis";
 import * as repo from "@/server/repo/user";
 
 const selectionsSchema = z.record(z.string(), z.union([z.string(), z.array(z.string()), z.number()])).default({});
@@ -21,6 +23,21 @@ export async function logMeal(input: { menuItemId: string; selections: unknown; 
   const selections = selectionsSchema.parse(input.selections);
   const portion = z.number().min(0.1).max(5).parse(input.portion);
   const day = input.day ? daySchema.parse(input.day) : todayISO();
+
+  // Typical (generic) dishes aren't stored as menu items; rebuild them from the id.
+  if (parseTypicalId(input.menuItemId)) {
+    const meal = await typicalViewById(input.menuItemId);
+    const est = meal && resolveBasis(templateBasis(meal.name, meal.description ?? ""), selections).estimate;
+    if (!meal || !est) throw new Error("Meal not found");
+    const tv = est.values;
+    await repo.addEntry({
+      userId, day, menuItemId: null, restaurantId: meal.restaurant.id, name: `${meal.name} (typical)`, restaurantName: meal.restaurant.name,
+      selections, portion, status: est.status, provider: est.provider, kcal: tv.kcal.likely, kcalMin: tv.kcal.min, kcalMax: tv.kcal.max,
+      protein: tv.protein.likely, proteinMin: tv.protein.min, proteinMax: tv.protein.max, carbs: tv.carbs.likely, fat: tv.fat.likely, fiber: tv.fiber?.likely ?? null,
+    });
+    revalidatePath("/diary");
+    return { ok: true, kcal: tv.kcal.likely * portion };
+  }
 
   // Recompute on the server from the stored basis — never trust client numbers.
   const b = await getItemBasis(z.string().uuid().parse(input.menuItemId), { allowAi: false });
@@ -145,10 +162,10 @@ export async function getRestaurantPage(id: string): Promise<RestaurantPageData 
   const r = await getRestaurant(z.string().min(1).max(200).parse(id));
   if (!r) return null;
   const { userId } = await getSession();
-  const [meals, favs, saved] = await Promise.all([mealViews({ restaurantIds: [r.id] }), repo.listFavorites(userId), repo.listSavedRestaurants(userId)]);
+  const [real, favs, saved] = await Promise.all([mealViews({ restaurantIds: [r.id] }), repo.listFavorites(userId), repo.listSavedRestaurants(userId)]);
   return {
-    restaurant: { id: r.id, name: r.name, provider: r.provider, providerId: r.providerId, isDemo: r.isDemo, cuisines: r.cuisines, amenity: r.amenity, address: r.address, tags: r.tags },
-    meals,
+    restaurant: { id: r.id, name: r.name, provider: r.provider, providerId: r.providerId, isDemo: r.isDemo, cuisines: r.cuisines, amenity: r.amenity, address: r.address, lat: r.lat, lng: r.lng, tags: r.tags },
+    meals: real.length ? real : typicalViews(r),
     favoriteIds: favs.map((f) => f.menuItemId),
     saved: saved.some((s) => s.restaurantId === r.id),
     aiEnabled: Boolean(getLlmProvider()),

@@ -6,6 +6,27 @@ import type { SearchResponse } from "@/lib/searchCore";
 import type { RestaurantTags } from "@/server/db/schema";
 import type { MealView } from "@/server/repo/menu";
 import type { RestaurantCardData } from "@/components/RestaurantCard";
+import type { FoundMenu } from "@/lib/menuFinder";
+import type { HalalReport } from "@/lib/halal";
+
+export interface RestaurantHit {
+  id: string;
+  name: string;
+  cuisines: string[];
+  amenity: string | null;
+  lat: number;
+  lng: number;
+  distanceM: number;
+  halalTag: string | null;
+}
+
+export interface NewDish {
+  name: string;
+  description: string | null;
+  priceNok: number | null;
+  sourceUrl?: string | null;
+  category?: string | null;
+}
 
 export interface PlacesResponse {
   restaurants: RestaurantCardData[];
@@ -15,7 +36,7 @@ export interface PlacesResponse {
 }
 
 export interface RestaurantPageData {
-  restaurant: { id: string; name: string; provider: string; providerId: string; isDemo: boolean; cuisines: string[]; amenity: string | null; address: string | null; tags: RestaurantTags };
+  restaurant: { id: string; name: string; provider: string; providerId: string; isDemo: boolean; cuisines: string[]; amenity: string | null; address: string | null; lat: number; lng: number; tags: RestaurantTags };
   meals: MealView[];
   favoriteIds: string[];
   saved: boolean;
@@ -65,13 +86,17 @@ export interface Backend {
   mode: "server" | "static";
   places(lat: number, lng: number, radiusM: number): Promise<PlacesResponse>;
   geocode(q: string): Promise<{ label: string; lat: number; lng: number }[]>;
-  search(params: URLSearchParams): Promise<SearchApiResponse>;
+  search(params: URLSearchParams, halalReports?: Record<string, HalalReport>): Promise<SearchApiResponse>;
   meals(ids: string[]): Promise<MealView[]>;
   estimate(itemId: string, allowAi: boolean): Promise<{ basis: EstimateBasis; aiNote: string | null }>;
   restaurant(id: string): Promise<RestaurantPageData | null>;
   addDish(restaurantId: string, input: { name: string; description?: string; priceNok: number | null }): Promise<void>;
   /** Bulk import from a pasted menu; estimates run lazily when each dish is opened. */
-  addDishes(restaurantId: string, items: { name: string; description: string | null; priceNok: number | null }[]): Promise<number>;
+  addDishes(restaurantId: string, items: NewDish[]): Promise<number>;
+  /** Restaurant name search (whole country in the static build). */
+  searchRestaurants(q: string, lat: number, lng: number): Promise<RestaurantHit[]>;
+  /** AI web search for the restaurant's current menu, with source links. */
+  findMenu(restaurantId: string): Promise<FoundMenu>;
   logMeal(input: { menuItemId: string; selections: Selections; portion: number; day: string }): Promise<{ kcal: number }>;
   setEntryPortion(id: string, portion: number): Promise<void>;
   deleteEntry(id: string): Promise<void>;

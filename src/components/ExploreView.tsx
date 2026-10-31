@@ -6,9 +6,11 @@ import { List, Loader2, Map as MapIcon, MapPin, Search, Sparkles } from "lucide-
 import { formatDistance } from "@/lib/geo";
 import { useLocation } from "@/lib/client/location";
 import { track } from "@/lib/client/loading";
-import { backend } from "@/lib/client/backend";
+import { backend, type RestaurantHit } from "@/lib/client/backend";
+import { useHalal } from "@/lib/client/prefs";
+import { halalStatus, isHalalOption } from "@/lib/halal";
 import { LocationGate } from "./LocationGate";
-import { cuisineLabel, RestaurantCard, type RestaurantCardData } from "./RestaurantCard";
+import { cuisineLabel, HalalBadge, RestaurantCard, type RestaurantCardData } from "./RestaurantCard";
 
 type PlacesResponse = { restaurants: RestaurantCardData[]; attribution: string; liveError: string | null; pending: boolean };
 
@@ -29,6 +31,25 @@ export function ExploreView() {
   const [filter, setFilter] = useState("");
   const [onlyWithData, setOnlyWithData] = useState(false);
   const [shown, setShown] = useState(100);
+  const { halalOnly, setHalalOnly, reports } = useHalal();
+  const [hits, setHits] = useState<RestaurantHit[] | null>(null);
+  const searching = filter.trim().length >= 2;
+
+  // Typing searches restaurant names across the whole country, not just nearby.
+  useEffect(() => {
+    if (!searching || !location) {
+      setHits(null);
+      return;
+    }
+    let live = true;
+    const t = setTimeout(() => {
+      track(backend.searchRestaurants(filter.trim(), location.lat, location.lng)).then((h) => live && setHits(h), () => live && setHits([]));
+    }, 250);
+    return () => {
+      live = false;
+      clearTimeout(t);
+    };
+  }, [filter, searching, location]);
 
   useEffect(() => {
     if (!location) return;
@@ -58,14 +79,18 @@ export function ExploreView() {
     };
   }, [location, radiusM]);
 
+  const statusOf = (r: { id: string; name: string; cuisines: string[]; halalTag?: string | null }) => halalStatus(r, reports[r.id]).status;
   const list = useMemo(() => {
-    const q = filter.trim().toLowerCase();
     const rs = (data?.restaurants ?? []).filter(
-      (r) => (!onlyWithData || r.menuCount > 0) && (!q || r.name.toLowerCase().includes(q) || r.cuisines.some((c) => c.includes(q)) || (r.amenity ?? "").includes(q)),
+      (r) => (!onlyWithData || r.menuCount > 0) && (!halalOnly || isHalalOption(halalStatus({ ...r, halalTag: r.tags.halal }, reports[r.id]).status)),
     );
     // Restaurants we have nutrition for first, then by distance.
     return [...rs].sort((a, b) => Number(b.menuCount > 0) - Number(a.menuCount > 0) || a.distanceM - b.distanceM);
-  }, [data, filter, onlyWithData]);
+  }, [data, onlyWithData, halalOnly, reports]);
+
+  function visibleHits(h: RestaurantHit[]) {
+    return halalOnly ? h.filter((x) => isHalalOption(statusOf(x))) : h;
+  }
 
   if (!ready) return null;
   if (!location || changing) {
@@ -109,7 +134,7 @@ export function ExploreView() {
         <label className="relative min-w-40 flex-1">
           <span className="sr-only">Filter restaurants</span>
           <Search size={15} className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-ink-3" />
-          <input value={filter} onChange={(e) => setFilter(e.target.value)} placeholder="Filter by name or cuisine" className="w-full rounded-xl border border-line bg-surface py-2 pl-8 pr-3 text-sm outline-none focus:border-ink-3" />
+          <input value={filter} onChange={(e) => setFilter(e.target.value)} placeholder="Search restaurants by name or cuisine" className="w-full rounded-xl border border-line bg-surface py-2 pl-8 pr-3 text-sm outline-none focus:border-ink-3" aria-label="Search restaurants" />
         </label>
         <div className="flex gap-1 overflow-x-auto" role="radiogroup" aria-label="Search radius">
           {RADII.map((r) => (
@@ -125,16 +150,44 @@ export function ExploreView() {
           {data ? `${list.length} places · ${withData} with nutrition data` : "Searching…"}
           {data?.pending ? " · loading live map data…" : ""}
         </span>
-        <label className="flex items-center gap-2">
-          <input type="checkbox" checked={onlyWithData} onChange={(e) => setOnlyWithData(e.target.checked)} className="accent-[var(--ink)]" />
-          Only with nutrition
-        </label>
+        <div className="flex items-center gap-3">
+          <label className="flex items-center gap-1.5">
+            <input type="checkbox" checked={halalOnly} onChange={(e) => setHalalOnly(e.target.checked)} className="accent-[var(--ink)]" />
+            Halal only
+          </label>
+          <label className="flex items-center gap-1.5">
+            <input type="checkbox" checked={onlyWithData} onChange={(e) => setOnlyWithData(e.target.checked)} className="accent-[var(--ink)]" />
+            With menu
+          </label>
+        </div>
       </div>
 
+      {halalOnly && (
+        <p className="mb-3 rounded-xl bg-good-soft px-3 py-2 text-xs text-good">
+          Halal only: showing restaurants tagged halal, plus “likely halal” ones (kebab, Turkish, Middle Eastern…) that aren’t confirmed — always ask. Dishes with pork are hidden.
+        </p>
+      )}
       {data?.liveError && <p className="mb-3 rounded-xl bg-warn-soft px-3 py-2 text-xs text-warn">{data.liveError}</p>}
       {error && <p className="mb-3 rounded-xl bg-warn-soft px-3 py-2 text-sm text-warn" role="alert">{error}</p>}
 
-      {view === "map" ? (
+      {searching ? (
+        <section aria-label="Restaurant search results">
+          <p className="mb-2 text-xs text-ink-2">{hits === null ? "Searching…" : `${visibleHits(hits).length} restaurants matching “${filter.trim()}”`}</p>
+          <ul className="space-y-2">
+            {visibleHits(hits ?? []).map((h) => (
+              <li key={h.id}>
+                <Link href={`/r/?id=${encodeURIComponent(h.id)}`} className="card flex items-center gap-3 p-4 transition hover:border-ink-3/40">
+                  <div className="min-w-0 flex-1">
+                    <p className="flex items-center gap-2 truncate font-semibold">{h.name}<HalalBadge status={statusOf(h)} /></p>
+                    <p className="truncate text-xs text-ink-2">{formatDistance(h.distanceM)} away{h.cuisines.length ? ` · ${h.cuisines.slice(0, 2).map(cuisineLabel).join(", ")}` : h.amenity ? ` · ${cuisineLabel(h.amenity)}` : ""}</p>
+                  </div>
+                </Link>
+              </li>
+            ))}
+            {hits !== null && visibleHits(hits).length === 0 && <li className="card p-6 text-center text-sm text-ink-2">No restaurants found with that name.</li>}
+          </ul>
+        </section>
+      ) : view === "map" ? (
         <MapView
           center={location}
           radiusM={radiusM}
@@ -145,7 +198,7 @@ export function ExploreView() {
       ) : (
         <ul className="space-y-2">
           {list.slice(0, shown).map((r) => (
-            <li key={r.id}><RestaurantCard r={r} /></li>
+            <li key={r.id}><RestaurantCard r={r} halal={statusOf({ ...r, halalTag: r.tags.halal })} /></li>
           ))}
           {list.length > shown && (
             <li>

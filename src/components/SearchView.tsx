@@ -5,12 +5,14 @@ import { Loader2, MapPin, Search, SlidersHorizontal } from "lucide-react";
 import { formatDistance } from "@/lib/geo";
 import { useLocation } from "@/lib/client/location";
 import { track } from "@/lib/client/loading";
-import { backend, type SearchApiResponse } from "@/lib/client/backend";
+import { backend, type RestaurantHit, type SearchApiResponse } from "@/lib/client/backend";
+import { useHalal } from "@/lib/client/prefs";
+import { halalStatus, isHalalOption } from "@/lib/halal";
 import type { MealFilters } from "@/lib/queryParser";
 import type { MealResult } from "@/lib/searchCore";
 import { MealRow } from "./MealRow";
 import { MealSheet } from "./MealSheet";
-import { cuisineLabel } from "./RestaurantCard";
+import { cuisineLabel, HalalBadge } from "./RestaurantCard";
 
 type Overrides = { maxKcal?: number; minProtein?: number; km?: number; vegetarian?: boolean; vegan?: boolean; halal?: boolean; budget?: boolean; sort?: MealFilters["sort"] };
 
@@ -25,6 +27,8 @@ export function SearchView({ initialQuery = "" }: { initialQuery?: string }) {
   const [error, setError] = useState<string | null>(null);
   const [open, setOpen] = useState<MealResult | null>(null);
   const [showFilters, setShowFilters] = useState(false);
+  const { halalOnly, setHalalOnly, reports } = useHalal();
+  const [restaurantHits, setRestaurantHits] = useState<RestaurantHit[]>([]);
 
   const run = useCallback(
     async (query: string, o: Overrides) => {
@@ -36,21 +40,27 @@ export function SearchView({ initialQuery = "" }: { initialQuery?: string }) {
         p.set("lng", String(location.lng));
       }
       for (const [k, v] of Object.entries(o)) if (v !== undefined) p.set(k, v === true ? "1" : v === false ? "0" : String(v));
+      if (o.halal === undefined && halalOnly) p.set("halal", "1");
       try {
-        setData(await track(backend.search(p)));
+        const [res, hits] = await Promise.all([
+          track(backend.search(p, reports)),
+          query.trim().length >= 2 && location ? backend.searchRestaurants(query.trim(), location.lat, location.lng).catch(() => []) : Promise.resolve([]),
+        ]);
+        setData(res);
+        setRestaurantHits(res.filters.text ? hits.slice(0, 6) : []);
       } catch (e) {
         setError((e as Error).message || "Search failed");
       } finally {
         setLoading(false);
       }
     },
-    [location],
+    [location, halalOnly, reports],
   );
 
   useEffect(() => {
     if (ready) run(q, ov);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [ready, location, ov]);
+  }, [ready, location, ov, halalOnly]);
 
   // Re-run once a slow live places lookup finishes on the server.
   useEffect(() => {
@@ -112,7 +122,7 @@ export function SearchView({ initialQuery = "" }: { initialQuery?: string }) {
             <div className="flex flex-wrap gap-1.5">
               <button className={chip(Boolean(f?.vegetarian))} onClick={() => setO({ vegetarian: !f?.vegetarian })}>Vegetarian</button>
               <button className={chip(Boolean(f?.vegan))} onClick={() => setO({ vegan: !f?.vegan })}>Vegan</button>
-              <button className={chip(Boolean(f?.halal))} onClick={() => setO({ halal: !f?.halal })}>Halal</button>
+              <button className={chip(Boolean(f?.halal))} onClick={() => { setHalalOnly(!f?.halal); setO({ halal: !f?.halal }); }}>Halal</button>
             </div>
             <p className="mt-1.5 text-[11px] text-ink-3">Halal only matches restaurants that state it (e.g. on OpenStreetMap). Vegetarian/vegan uses the restaurant’s label, else is inferred from estimated ingredients — always confirm when ordering.</p>
           </div>
@@ -137,7 +147,7 @@ export function SearchView({ initialQuery = "" }: { initialQuery?: string }) {
             f.maxDistanceKm && `within ${f.maxDistanceKm} km`,
             f.vegetarian && "vegetarian",
             f.vegan && "vegan",
-            f.halal && "halal",
+            f.halal && "halal (confirmed or likely, no pork)",
             f.withinBudget && `within ${Math.round(data!.remainingKcal)} kcal left today`,
           ].filter(Boolean).join(" · ") || "All meals nearby"}
           {location && <span className="text-ink-3"> · near {location.label}</span>}
@@ -156,9 +166,26 @@ export function SearchView({ initialQuery = "" }: { initialQuery?: string }) {
           <div className="space-y-2">{Array.from({ length: 4 }, (_, i) => <div key={i} className="h-32 animate-pulse rounded-[20px] bg-surface-2" />)}</div>
         ) : data ? (
           <>
+            {restaurantHits.filter((h) => !halalOnly || isHalalOption(halalStatus(h, reports[h.id]).status)).length > 0 && (
+              <section className="mb-4">
+                <h2 className="mb-2 text-xs font-semibold uppercase tracking-wider text-ink-3">Restaurants</h2>
+                <ul className="divide-y divide-line overflow-hidden rounded-[20px] border border-line bg-surface">
+                  {restaurantHits
+                    .filter((h) => !halalOnly || isHalalOption(halalStatus(h, reports[h.id]).status))
+                    .map((h) => (
+                      <li key={h.id}>
+                        <Link href={`/r/?id=${encodeURIComponent(h.id)}`} className="flex items-center justify-between gap-2 px-4 py-3 text-sm hover:bg-surface-2">
+                          <span className="flex min-w-0 items-center gap-2"><span className="truncate font-medium">{h.name}</span><HalalBadge status={halalStatus(h, reports[h.id]).status} /></span>
+                          <span className="shrink-0 text-xs text-ink-3">{formatDistance(h.distanceM)}</span>
+                        </Link>
+                      </li>
+                    ))}
+                </ul>
+              </section>
+            )}
             <p className="mb-2 flex items-center gap-2 text-xs text-ink-3">
               {loading && <Loader2 size={12} className="animate-spin" />}
-              {data.results.length} meals from {data.scanned.withMenus} restaurants with menu data ({data.scanned.restaurants} places scanned)
+              {data.results.length} meals from {data.scanned.restaurants} places nearby · {data.scanned.withMenus} with real menu data, the rest show typical dishes
             </p>
             <ul className="space-y-2">
               {data.results.map((r) => (
@@ -171,6 +198,7 @@ export function SearchView({ initialQuery = "" }: { initialQuery?: string }) {
                         <span className="font-medium text-ink">{r.meal.restaurant.name}</span>
                         <span>{formatDistance(r.distanceM)}</span>
                         <span className="tabular rounded bg-surface-2 px-1.5 py-0.5 font-medium text-ink">Fit {r.score}</span>
+                        <HalalBadge status={r.diet.halal} />
                         {r.reasons.slice(0, 2).map((x) => <span key={x}>· {x}</span>)}
                       </div>
                     }
@@ -180,21 +208,6 @@ export function SearchView({ initialQuery = "" }: { initialQuery?: string }) {
             </ul>
             {data.results.length === 0 && (
               <p className="card p-6 text-center text-sm text-ink-2">No meals with nutrition data match these filters. Try relaxing them or a larger distance.</p>
-            )}
-            {data.noMenuMatches.length > 0 && (
-              <section className="mt-6">
-                <h2 className="mb-2 text-xs font-semibold uppercase tracking-wider text-ink-3">Matching places without menu data yet</h2>
-                <ul className="divide-y divide-line overflow-hidden rounded-[20px] border border-line bg-surface">
-                  {data.noMenuMatches.map((r) => (
-                    <li key={r.id}>
-                      <Link href={`/r/?id=${encodeURIComponent(r.id)}`} className="flex items-center justify-between px-4 py-3 text-sm hover:bg-surface-2">
-                        <span><span className="font-medium">{r.name}</span> <span className="text-xs text-ink-2">{r.cuisines.slice(0, 2).map(cuisineLabel).join(", ")}</span></span>
-                        <span className="text-xs text-ink-3">{formatDistance(r.distanceM)} · add a dish</span>
-                      </Link>
-                    </li>
-                  ))}
-                </ul>
-              </section>
             )}
           </>
         ) : null}

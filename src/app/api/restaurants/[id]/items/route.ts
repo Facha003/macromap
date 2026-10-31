@@ -13,7 +13,15 @@ const bodySchema = z.object({
 
 const bulkSchema = z.object({
   items: z
-    .array(z.object({ name: z.string().trim().min(2).max(120), description: z.string().trim().max(500).nullable().optional(), priceNok: z.number().min(0).max(5000).nullable().optional() }))
+    .array(
+      z.object({
+        name: z.string().trim().min(2).max(120),
+        description: z.string().trim().max(500).nullable().optional(),
+        priceNok: z.number().min(0).max(5000).nullable().optional(),
+        sourceUrl: z.string().url().max(1000).nullable().optional(),
+        category: z.string().trim().max(60).nullable().optional(),
+      }),
+    )
     .min(1)
     .max(80),
 });
@@ -38,7 +46,7 @@ export async function POST(req: Request, ctx: { params: Promise<{ id: string }> 
       for (const d of bulk.data.items) {
         if (existing.has(d.name.toLowerCase())) continue;
         existing.add(d.name.toLowerCase());
-        await createCommunityItem(restaurant.id, userId, { name: d.name, description: d.description ?? undefined, priceNok: d.priceNok ?? null });
+        await createCommunityItem(restaurant.id, userId, { name: d.name, description: d.description ?? undefined, priceNok: d.priceNok ?? null, sourceUrl: d.sourceUrl ?? null, category: d.category ?? null });
         added++;
       }
       return NextResponse.json({ added });

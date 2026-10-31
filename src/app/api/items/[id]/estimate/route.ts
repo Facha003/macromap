@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { getItemBasis } from "@/server/nutrition/service";
+import { typicalViewById } from "@/server/repo/menu";
 import { fail, limited } from "../../../_util";
 
 /** Returns the best basis for one item; with ?ai=1 it may run (and cache) an AI estimate. */
@@ -9,6 +10,11 @@ export async function GET(req: Request, ctx: { params: Promise<{ id: string }> }
   if (allowAi) {
     const blocked = limited(req, "estimate-ai", 12);
     if (blocked) return blocked;
+  }
+  const decoded = decodeURIComponent(id);
+  if (decoded.startsWith("typical:")) {
+    const meal = await typicalViewById(decoded);
+    return meal ? NextResponse.json({ basis: meal.basis, aiNote: null }) : NextResponse.json({ error: "Not found" }, { status: 404 });
   }
   if (!/^[0-9a-f-]{36}$/.test(id)) return NextResponse.json({ error: "Bad id" }, { status: 400 });
   try {

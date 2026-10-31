@@ -31,7 +31,7 @@ export function MealSheet({ meal, onClose, initialSelections = {}, isFavorite = 
 
   // Upgrade template estimates with AI (server caches the result per menu text).
   useEffect(() => {
-    if (basis.kind === "official") return;
+    if (basis.kind === "official" || meal.sourceType === "typical") return;
     const isTemplate = (basis.kind === "archetype" || basis.kind === "components") && basis.provider === "template";
     if (!(isTemplate || basis.kind === "unavailable") || meal.model === "ai-fallback") return;
     setAiState("loading");
@@ -83,7 +83,8 @@ export function MealSheet({ meal, onClose, initialSelections = {}, isFavorite = 
             <div className="mb-1 flex flex-wrap items-center gap-1.5">
               {e && <ProvenanceChip status={e.status} provider={e.provider} />}
               {meal.restaurant.isDemo && <DemoBadge />}
-              {meal.sourceType === "community" && <span className="rounded-full bg-surface-2 px-2 py-0.5 text-[11px] text-ink-2">Added by a user</span>}
+              {meal.sourceType === "community" && <span className="rounded-full bg-surface-2 px-2 py-0.5 text-[11px] text-ink-2">{meal.category === "Found online by AI" ? "Found online by AI" : "Added by a user"}</span>}
+              {meal.sourceType === "typical" && <span className="rounded-full border border-dashed border-ink-3 px-2 py-0.5 text-[11px] text-ink-2">Typical dish · not their menu</span>}
             </div>
             <h2 id="meal-title" className="text-lg font-semibold leading-tight tracking-tight">{meal.name}</h2>
             <p className="truncate text-xs text-ink-2">
@@ -96,6 +97,14 @@ export function MealSheet({ meal, onClose, initialSelections = {}, isFavorite = 
 
         <div className="space-y-5 px-5 py-4">
           {meal.description && <p className="text-sm text-ink-2">{meal.description}</p>}
+          {meal.sourceType === "typical" && (
+            <p className="rounded-xl border border-dashed border-line p-3 text-xs text-ink-2">
+              This is a generic dish for this kind of restaurant, not something from {meal.restaurant.name}’s menu. Their version, portion and price may differ — use it as a rough guide.
+            </p>
+          )}
+          {meal.sourceUrl && meal.sourceType === "community" && (
+            <p className="text-xs text-ink-2">Menu source: <a href={meal.sourceUrl} target="_blank" rel="noreferrer" className="underline underline-offset-2">{new URL(meal.sourceUrl).hostname}</a> — check it’s current.</p>
+          )}
 
           {aiState === "loading" && (
             <p className="flex items-center gap-2 rounded-xl bg-surface-2 px-3 py-2 text-xs text-ink-2"><Loader2 size={14} className="animate-spin" />Refining estimate with AI ingredient analysis…</p>
@@ -191,9 +200,9 @@ export function MealSheet({ meal, onClose, initialSelections = {}, isFavorite = 
                   <span className="tabular w-11 text-center text-sm font-medium">{portion}×</span>
                   <button className="p-2.5" aria-label="Larger portion" onClick={() => setPortion((p) => PORTIONS[Math.min(PORTIONS.length - 1, PORTIONS.indexOf(p) + 1)])}><Plus size={16} /></button>
                 </div>
-                <button aria-label={fav ? "Remove from saved" : "Save meal"} aria-pressed={fav} onClick={() => start(async () => setFav(await backend.toggleFavorite(meal.id, sel)))} className="rounded-xl bg-surface-2 p-2.5">
+                {!(backend.mode === "server" && meal.sourceType === "typical") && <button aria-label={fav ? "Remove from saved" : "Save meal"} aria-pressed={fav} onClick={() => start(async () => setFav(await backend.toggleFavorite(meal.id, sel)))} className="rounded-xl bg-surface-2 p-2.5">
                   <Heart size={18} className={fav ? "fill-current text-danger" : ""} />
-                </button>
+                </button>}
                 <button aria-label="Compare" aria-pressed={compare.has(meal.id)} onClick={() => compare.toggle({ id: meal.id, selections: sel })} className={`rounded-xl p-2.5 ${compare.has(meal.id) ? "bg-ink text-bg" : "bg-surface-2"}`}>
                   <GitCompareArrows size={18} />
                 </button>
@@ -331,7 +340,7 @@ function Details({ meal, estimate: e, portion }: { meal: MealView; estimate: Non
         </ul>
       </div>
       <p>
-        Menu {meal.sourceType === "demo" ? "is illustrative demo data" : meal.sourceType === "community" ? "item added by a user" : "from the restaurant"} · last checked {fmtDate(meal.lastChecked)} · nutrition computed {fmtDate(e.computedAt)}.
+        Menu {meal.sourceType === "demo" ? "is illustrative demo data" : meal.sourceType === "typical" ? "item is a generic typical dish, not from this restaurant" : meal.sourceType === "community" ? "item added by a user" : "from the restaurant"} · last checked {fmtDate(meal.lastChecked)} · nutrition computed {fmtDate(e.computedAt)}.
         {e.status !== "verified" && " Estimates can be wrong — restaurants vary portions and recipes."}
       </p>
     </div>
