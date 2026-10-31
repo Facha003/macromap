@@ -78,7 +78,8 @@ export type EstimateProvider =
   | "gemini"
   | "groq"
   | "ollama"
-  | "anthropic";
+  | "anthropic"
+  | "free_ai";
 
 export interface NutritionValues {
   kcal: Range;

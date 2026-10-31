@@ -26,6 +26,7 @@ export const PROVIDER_LABEL: Record<EstimateProvider | "none", string> = {
   groq: "AI estimate · Groq",
   ollama: "AI estimate · Ollama",
   anthropic: "AI estimate · Claude",
+  free_ai: "AI estimate · free AI",
   none: "No estimate",
 };
 

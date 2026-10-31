@@ -11,7 +11,7 @@ const STYLE: Record<DataStatus, { cls: string; label: string; Icon: typeof Info 
 /** Always shows how trustworthy a number is: icon + words, never colour alone. */
 export function ProvenanceChip({ status, provider, compact = false }: { status: DataStatus; provider?: EstimateProvider | "none"; compact?: boolean }) {
   const s = STYLE[status];
-  const isAi = provider && ["gemini", "groq", "ollama", "anthropic"].includes(provider);
+  const isAi = provider && ["gemini", "groq", "ollama", "anthropic", "free_ai"].includes(provider);
   const label = status === "estimated" && isAi ? "AI estimate" : s.label;
   return (
     <span className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[11px] font-medium ${s.cls}`} title={provider ? PROVIDER_LABEL[provider] : undefined}>

@@ -15,6 +15,7 @@ import { DEFAULT_OVERPASS_ENDPOINTS, fetchOverpass, overpassQuery } from "@/lib/
 import { tilesForRadius, tileKey, type PlaceSearchRow, type PlaceTileRow, type PlacesIndex } from "@/lib/placeTiles";
 import { parseTypicalId, restaurantKind, typicalDish, typicalDishesFor, typicalId } from "@/lib/typicalDishes";
 import { findMenuWithGemini } from "@/lib/menuFinder";
+import { estimateWithFreeAi } from "@/lib/freeAi";
 import { menuFileName, parseWebDishId, webDishId, type MenuIndex, type WebsiteMenu } from "@/lib/websiteMenuTypes";
 import { parseMealQuery } from "@/lib/queryParser";
 import type { GoalType } from "@/lib/scoring";
@@ -497,19 +498,39 @@ export const backend: Backend = {
     const current = basisFor(item);
     // Typical dishes are generic on purpose — AI adds nothing without the real menu text.
     if (item.sourceType === "typical") return { basis: current.basis, aiNote: null };
-    const isTemplate = current.basis.kind === "unavailable" || ((current.basis.kind === "archetype" || current.basis.kind === "components") && current.basis.provider === "template");
+    const unavailable = current.basis.kind === "unavailable";
+    const isTemplate = unavailable || ((current.basis.kind === "archetype" || current.basis.kind === "components") && current.basis.provider === "template");
     if (!allowAi || !isTemplate || current.model === "ai-fallback") return { basis: current.basis, aiNote: null };
-    if (!load<string>(GEMINI_KEY, "")) return { basis: current.basis, aiNote: "Showing a template estimate. Add a free Gemini key in Profile to analyse any dish with AI." };
+    const hasKey = Boolean(load<string>(GEMINI_KEY, ""));
+    // Without a personal key, the free AI is used only for dishes we can't estimate at all.
+    if (!hasKey && !unavailable) return { basis: current.basis, aiNote: null };
     const place = findPlace(item.restaurantId)!;
-    try {
-      const ai = await askGemini(item, place);
-      const template = current.basis;
-      const chosen = !ai || (ai.kind === "unavailable" && template.kind === "archetype") ? template : ai;
-      save("ai", { ...load<Record<string, AiRecord>>("ai", {}), [item.id]: { hash: textHash(item), basis: chosen, model: chosen === ai ? geminiModel() : "ai-fallback" } });
-      return { basis: chosen, aiNote: chosen === ai ? null : "The AI response couldn't be used — showing a template estimate." };
-    } catch (e) {
-      return { basis: current.basis, aiNote: `AI estimation failed (${(e as Error).message}) — showing a template estimate.` };
+    const remember = (chosen: EstimateBasis, model: string) =>
+      save("ai", { ...load<Record<string, AiRecord>>("ai", {}), [item.id]: { hash: textHash(item), basis: chosen, model } });
+    let ai: EstimateBasis | null = null;
+    let model = "";
+    let failure = "";
+    if (hasKey) {
+      try {
+        ai = await askGemini(item, place);
+        model = geminiModel();
+      } catch (e) {
+        failure = (e as Error).message;
+      }
     }
+    if (!ai && unavailable) {
+      try {
+        ai = await estimateWithFreeAi({ name: item.name, description: item.description, cuisines: place.cuisines, restaurantName: place.isDemo ? undefined : place.name });
+        model = "pollinations";
+      } catch (e) {
+        failure = (e as Error).message;
+      }
+    }
+    const template = current.basis;
+    if (!ai) return { basis: template, aiNote: failure ? `AI estimation failed (${failure}).` : null };
+    const chosen = ai.kind === "unavailable" && template.kind === "archetype" ? template : ai;
+    remember(chosen, chosen === ai ? model : "ai-fallback");
+    return { basis: chosen, aiNote: chosen === ai ? null : "The AI couldn't work this dish out — showing a template estimate." };
   },
 
   async restaurant(id) {

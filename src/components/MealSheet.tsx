@@ -128,11 +128,14 @@ export function MealSheet({ meal, onClose, initialSelections = {}, isFavorite = 
           )}
 
           {aiState === "loading" && (
-            <p className="flex items-center gap-2 rounded-xl bg-surface-2 px-3 py-2 text-xs text-ink-2"><Loader2 size={14} className="animate-spin" />Refining estimate with AI ingredient analysis…</p>
+            <p className="flex items-center gap-2 rounded-xl bg-surface-2 px-3 py-2 text-xs text-ink-2">
+              <Loader2 size={14} className="shrink-0 animate-spin" />
+              {e ? "Refining estimate with AI ingredient analysis…" : "Working out the ingredients with AI — this can take up to a minute. Nutrients are then calculated from Matvaretabellen."}
+            </p>
           )}
           {aiNote && aiState === "done" && <p className="rounded-xl bg-surface-2 px-3 py-2 text-xs text-ink-2">{aiNote}</p>}
 
-          {!e ? (
+          {!e && aiState === "loading" ? null : !e ? (
             <div className="rounded-2xl border border-dashed border-line p-5 text-sm text-ink-2">
               <p className="font-medium text-ink">No nutrition estimate available</p>
               <p className="mt-1">{resolved.reason}</p>

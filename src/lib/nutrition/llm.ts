@@ -38,7 +38,7 @@ export interface MenuText {
   restaurantName?: string;
 }
 
-export function buildPrompt(item: MenuText): { system: string; user: string } {
+export function buildPrompt(item: MenuText, opts: { templates?: boolean } = {}): { system: string; user: string } {
   const archetypes = ARCHETYPES.map((a) => {
     const opts = a.options
       .map((o) =>
@@ -65,8 +65,7 @@ Rules:
 7. "assumptions": short, plain-English statements of what you assumed (max 5). "main_uncertainty": the single biggest unknown (e.g. "Sauce quantity").
 8. Roles: ${ROLES.join(", ")}.
 
-Dish templates:
-${archetypes}
+${opts.templates === false ? "Do not use dish templates: always set \"archetype\": null and list every ingredient in \"components\"." : `Dish templates:\n${archetypes}`}
 
 Ingredient keys:
 ${ingredients}

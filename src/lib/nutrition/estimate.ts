@@ -39,6 +39,7 @@ const MODEL_ERROR: Record<EstimateProvider, number> = {
   groq: 0.1,
   ollama: 0.12,
   anthropic: 0.1,
+  free_ai: 0.12,
 };
 
 const r = (likely: number, min = likely, max = likely): Range => ({ min, likely, max });
