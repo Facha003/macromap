@@ -141,6 +141,42 @@ async function allowed(url: string): Promise<boolean> {
   return robotsAllows(await robots, u.pathname);
 }
 
+// ── optional JavaScript rendering (MENU_RENDER=1) for sites that build pages in the browser ──
+type Browser = import("playwright").Browser;
+let browserPromise: Promise<Browser | null> | null = null;
+function browser(): Promise<Browser | null> {
+  browserPromise ??= process.env.MENU_RENDER === "1"
+    ? import("playwright").then((pw) => pw.chromium.launch()).catch((e) => {
+        console.warn(`  JS rendering unavailable: ${(e as Error).message.slice(0, 120)}`);
+        return null;
+      })
+    : Promise.resolve(null);
+  return browserPromise;
+}
+
+/** Loads a page in headless Chromium (no images/fonts/media) and returns the rendered HTML. */
+async function renderPage(url: string): Promise<{ url: string; html: string; text: string } | null> {
+  const b = await browser();
+  if (!b) return null;
+  const host = new URL(url).host;
+  const wait = (lastHit.get(host) ?? 0) + 1100 - Date.now();
+  if (wait > 0) await new Promise((r) => setTimeout(r, wait));
+  lastHit.set(host, Date.now());
+  const ctx = await b.newContext({ userAgent: UA, locale: "nb-NO" });
+  try {
+    const page = await ctx.newPage();
+    await page.route("**/*", (route) => (["image", "font", "media"].includes(route.request().resourceType()) ? route.abort() : route.continue()));
+    await page.goto(url, { waitUntil: "networkidle", timeout: 25_000 }).catch(() => page.waitForLoadState("domcontentloaded"));
+    const html = await page.content();
+    const text = await page.evaluate(() => document.body?.innerText ?? "");
+    return { url: page.url(), html, text };
+  } catch {
+    return null;
+  } finally {
+    await ctx.close();
+  }
+}
+
 async function readBody(res: Response): Promise<{ kind: "html" | "pdf"; html?: string; text: string } | null> {
   const type = res.headers.get("content-type") ?? "";
   const len = Number(res.headers.get("content-length") ?? 0);
@@ -165,9 +201,24 @@ async function readBody(res: Response): Promise<{ kind: "html" | "pdf"; html?: s
 interface Target { id: string; name: string; url: string; inOslo: boolean }
 
 async function crawl(t: Target): Promise<{ status: MenuIndex[string]["status"]; menu?: WebsiteMenu }> {
+  const first = await crawlOnce(t, false);
+  // Many restaurant sites build their content with JavaScript: render them when the plain fetch found nothing.
+  if ((first.status === "no-text" || first.status === "none") && (await browser())) {
+    const rendered = await crawlOnce(t, true);
+    if (rendered.status === "found") {
+      rendersFound++;
+      return rendered;
+    }
+  }
+  return first;
+}
+let rendersFound = 0;
+
+async function crawlOnce(t: Target, render: boolean): Promise<{ status: MenuIndex[string]["status"]; menu?: WebsiteMenu }> {
   const start = t.url.startsWith("http") ? t.url : `https://${t.url}`;
   if (isSkippedHost(start)) return { status: "none" };
   if (!(await allowed(start))) return { status: "blocked" };
+  if (render) return crawlRendered(t, start);
   let res = await politeFetch(start);
   // OSM often has outdated deep links; fall back to the site's front page.
   if (res && (res.status === 404 || res.status === 410) && new URL(start).pathname.length > 1) {
@@ -233,6 +284,41 @@ async function crawl(t: Target): Promise<{ status: MenuIndex[string]["status"]; 
   return { status: "none" };
 }
 
+/** Same strategy as crawlOnce, but every page is loaded in headless Chromium. */
+async function crawlRendered(t: Target, start: string): Promise<{ status: MenuIndex[string]["status"]; menu?: WebsiteMenu }> {
+  const home = await renderPage(start);
+  if (!home) return { status: "error" };
+  const pages = [home];
+  const seen = new Set([home.url]);
+  const visit = async (link: string) => {
+    if (seen.has(link) || pages.length >= 5 || isSkippedHost(link) || !(await allowed(link))) return;
+    seen.add(link);
+    const p = await renderPage(link);
+    if (p) pages.push(p);
+  };
+  for (const link of menuLinks(home.html, home.url)) await visit(link);
+  for (const p of pages.slice(1)) if (!looksLikeMenu(p.text)) for (const link of menuLinks(p.html, p.url, 2)) await visit(link);
+  const found = (dishes: ParsedDish[], method: MenuMethod, url: string) => ({
+    status: "found" as const,
+    menu: { restaurantId: t.id, sourceUrl: url, checkedAt: new Date().toISOString(), method, dishes: dedupeDishes(dishes) },
+  });
+  for (const p of pages) {
+    const d = extractJsonLdMenu(p.html);
+    if (d.length >= 3) return found(d, "jsonld", p.url);
+  }
+  const candidates = [...pages.slice(1), pages[0]].filter((p) => looksLikeMenu(p.text));
+  for (const p of candidates) {
+    const d = await aiExtract(p.text);
+    if (d && d.length >= 3) return found(d, "ai", p.url);
+  }
+  for (const p of candidates) {
+    const raw = parseMenuText(p.text, 200).filter((x) => x.priceNok != null);
+    const clean = dedupeDishes(raw);
+    if (clean.length >= 5 && clean.length >= raw.length * 0.6) return found(clean, "parser", p.url);
+  }
+  return { status: candidates.length ? "none" : "no-text" };
+}
+
 // ── main ──────────────────────────────────────────────────────────────────
 async function main() {
   if (!existsSync(join(PLACES, "index.json"))) throw new Error("No places snapshot — run npm run places:build first");
@@ -282,6 +368,8 @@ async function main() {
   const totalFound = Object.values(index).filter((e) => e.status === "found").length;
   console.log(`This run: ${JSON.stringify(counts)}. Menus available in total: ${totalFound}.`);
   if (AI_TOKEN) console.log(`GitHub Models: ${JSON.stringify(aiStats)}`);
+  if (process.env.MENU_RENDER === "1") console.log(`Menus found only after JavaScript rendering: ${rendersFound}`);
+  await (await browser())?.close();
 }
 
 main().catch((e) => {

@@ -61,6 +61,10 @@ jobs:
           path: public/menus
           key: menus-${{ github.run_id }}
           restore-keys: menus-
+      - name: Install headless browser for JavaScript-only restaurant sites
+        if: github.event_name != 'push'
+        continue-on-error: true
+        run: npx playwright install --with-deps chromium
       - name: Read menus from restaurant websites
         id: menus
         if: github.event_name != 'push'
@@ -71,6 +75,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           MENU_CRAWL_LIMIT: ${{ github.event.inputs.limit || '600' }}
           MENU_RECHECK: ${{ github.event.inputs.recheck || '' }}
+          MENU_RENDER: "1"
           MENU_CRAWL_MINUTES: ${{ github.event_name == 'workflow_dispatch' && '45' || '25' }}
       - if: steps.menus.outcome == 'success'
         uses: actions/cache/save@v4
