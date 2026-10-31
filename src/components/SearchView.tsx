@@ -12,7 +12,7 @@ import type { MealFilters } from "@/lib/queryParser";
 import type { MealResult } from "@/lib/searchCore";
 import { MealRow } from "./MealRow";
 import { MealSheet } from "./MealSheet";
-import { cuisineLabel, HalalBadge } from "./RestaurantCard";
+import { HalalBadge } from "./RestaurantCard";
 
 type Overrides = { maxKcal?: number; minProtein?: number; km?: number; vegetarian?: boolean; vegan?: boolean; halal?: boolean; budget?: boolean; sort?: MealFilters["sort"] };
 
