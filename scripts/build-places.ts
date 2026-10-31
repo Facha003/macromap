@@ -22,7 +22,9 @@ const OUT = join(process.cwd(), "public", "places");
 async function fetchCountry(): Promise<OverpassElement[]> {
   const q = `[out:json][timeout:600][maxsize:536870912];area["ISO3166-1"="${COUNTRY}"][admin_level=2]->.c;nwr["amenity"~"^(restaurant|fast_food|cafe|food_court|ice_cream)$"]["name"](area.c);out center tags;`;
   let lastErr: unknown;
-  for (const endpoint of ENDPOINTS) {
+  // Two passes over the mirrors, with a pause, because the public servers are often briefly overloaded.
+  for (const endpoint of [...ENDPOINTS, ...ENDPOINTS]) {
+    if (lastErr) await new Promise((r) => setTimeout(r, 20_000));
     try {
       console.log(`Querying ${endpoint} for ${COUNTRY}…`);
       const res = await fetch(endpoint, {

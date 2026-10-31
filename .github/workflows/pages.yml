@@ -28,9 +28,23 @@ jobs:
           cache: npm
       - run: npm ci
       - run: npm test
+      # Start from the last good snapshot so a failed OSM query never ships an empty site.
+      - uses: actions/cache/restore@v4
+        with:
+          path: public/places
+          key: places-${{ github.run_id }}
+          restore-keys: places-
       - name: Restaurant snapshot from OpenStreetMap
-        # If OSM is unavailable the site still deploys and falls back to live lookups.
-        run: npm run places:build || echo "::warning::Places snapshot failed; the site will use live OSM lookups"
+        id: places
+        continue-on-error: true
+        run: npm run places:build
+      - if: steps.places.outcome == 'success'
+        uses: actions/cache/save@v4
+        with:
+          path: public/places
+          key: places-${{ github.run_id }}
+      - if: steps.places.outcome != 'success'
+        run: echo "::warning::Places snapshot failed; deploying the previous snapshot (if any)"
       - name: Build static site
         run: npm run build:static
         env:
