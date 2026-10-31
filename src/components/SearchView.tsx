@@ -1,0 +1,207 @@
+"use client";
+import Link from "next/link";
+import { useCallback, useEffect, useState } from "react";
+import { Loader2, MapPin, Search, SlidersHorizontal } from "lucide-react";
+import { formatDistance } from "@/lib/geo";
+import { useLocation } from "@/lib/client/location";
+import { track } from "@/lib/client/loading";
+import type { MealFilters } from "@/lib/queryParser";
+import type { MealResult, SearchResponse } from "@/server/search";
+import { MealRow } from "./MealRow";
+import { MealSheet } from "./MealSheet";
+import { cuisineLabel } from "./RestaurantCard";
+
+type Overrides = { maxKcal?: number; minProtein?: number; km?: number; vegetarian?: boolean; vegan?: boolean; halal?: boolean; budget?: boolean; sort?: MealFilters["sort"] };
+
+const EXAMPLES = ["40 g protein under 650 kcal within 3 km", "high protein sushi", "vegan under 500 kcal", "kebab", "fits my remaining budget"];
+
+export function SearchView({ initialQuery = "" }: { initialQuery?: string }) {
+  const { location, ready } = useLocation();
+  const [q, setQ] = useState(initialQuery);
+  const [ov, setOv] = useState<Overrides>({});
+  const [data, setData] = useState<(SearchResponse & { filters: MealFilters; remainingKcal: number }) | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [open, setOpen] = useState<MealResult | null>(null);
+  const [showFilters, setShowFilters] = useState(false);
+
+  const run = useCallback(
+    async (query: string, o: Overrides) => {
+      setLoading(true);
+      setError(null);
+      const p = new URLSearchParams({ q: query });
+      if (location) {
+        p.set("lat", String(location.lat));
+        p.set("lng", String(location.lng));
+      }
+      for (const [k, v] of Object.entries(o)) if (v !== undefined) p.set(k, v === true ? "1" : v === false ? "0" : String(v));
+      try {
+        const res = await track(fetch(`/api/search?${p}`));
+        const j = await res.json();
+        if (!res.ok) throw new Error(j.error);
+        setData(j);
+      } catch (e) {
+        setError((e as Error).message || "Search failed");
+      } finally {
+        setLoading(false);
+      }
+    },
+    [location],
+  );
+
+  useEffect(() => {
+    if (ready) run(q, ov);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [ready, location, ov]);
+
+  // Re-run once a slow live places lookup finishes on the server.
+  useEffect(() => {
+    if (!data?.pending) return;
+    const t = setTimeout(() => run(q, ov), 6000);
+    return () => clearTimeout(t);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [data]);
+
+  const f = data?.filters;
+  const setO = (patch: Overrides) => setOv((o) => ({ ...o, ...patch }));
+  const chip = (on: boolean) => `whitespace-nowrap rounded-full px-3 py-1.5 text-xs font-medium transition ${on ? "bg-ink text-bg" : "bg-surface-2 text-ink-2"}`;
+
+  return (
+    <div>
+      <p className="text-xs font-medium uppercase tracking-wider text-ink-3">Search</p>
+      <h1 className="mb-3 text-xl font-semibold tracking-tight">Find a meal that fits</h1>
+      <form
+        onSubmit={(e) => {
+          e.preventDefault();
+          setOv({});
+          run(q, {});
+        }}
+        className="relative"
+      >
+        <Search size={17} className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-ink-3" />
+        <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Dish, restaurant or “35 g protein under 600 kcal”" className="w-full rounded-2xl border border-line bg-surface py-3.5 pl-10 pr-24 text-sm outline-none focus:border-ink-3" aria-label="Search meals" />
+        <button className="absolute right-1.5 top-1/2 -translate-y-1/2 rounded-xl bg-accent px-4 py-2 text-sm font-semibold text-accent-ink">Search</button>
+      </form>
+      {!q && (
+        <div className="mt-2 flex gap-1.5 overflow-x-auto pb-1">
+          {EXAMPLES.map((ex) => (
+            <button key={ex} onClick={() => { setQ(ex); setOv({}); run(ex, {}); }} className="whitespace-nowrap rounded-full border border-line px-3 py-1 text-xs text-ink-2 hover:text-ink">{ex}</button>
+          ))}
+        </div>
+      )}
+
+      <div className="mt-3 flex items-center gap-1.5 overflow-x-auto pb-1">
+        <button onClick={() => setShowFilters((s) => !s)} className={chip(showFilters)} aria-expanded={showFilters}><SlidersHorizontal size={13} className="mr-1 inline" />Filters</button>
+        {[500, 650, 800].map((k) => (
+          <button key={k} className={chip(f?.maxKcal === k)} onClick={() => setO({ maxKcal: f?.maxKcal === k ? 0 : k })}>≤ {k} kcal</button>
+        ))}
+        {[30, 40].map((p) => (
+          <button key={p} className={chip(f?.minProtein === p)} onClick={() => setO({ minProtein: f?.minProtein === p ? 0 : p })}>≥ {p} g protein</button>
+        ))}
+        <button className={chip(Boolean(f?.withinBudget))} onClick={() => setO({ budget: !f?.withinBudget })}>Within today’s budget</button>
+      </div>
+
+      {showFilters && (
+        <div className="card mt-2 space-y-3 p-4 text-sm">
+          <div>
+            <p className="mb-1.5 text-xs font-medium text-ink-2">Distance</p>
+            <div className="flex flex-wrap gap-1.5">
+              {[1, 2, 3, 5].map((km) => <button key={km} className={chip(f?.maxDistanceKm === km)} onClick={() => setO({ km })}>{km} km</button>)}
+            </div>
+          </div>
+          <div>
+            <p className="mb-1.5 text-xs font-medium text-ink-2">Diet</p>
+            <div className="flex flex-wrap gap-1.5">
+              <button className={chip(Boolean(f?.vegetarian))} onClick={() => setO({ vegetarian: !f?.vegetarian })}>Vegetarian</button>
+              <button className={chip(Boolean(f?.vegan))} onClick={() => setO({ vegan: !f?.vegan })}>Vegan</button>
+              <button className={chip(Boolean(f?.halal))} onClick={() => setO({ halal: !f?.halal })}>Halal</button>
+            </div>
+            <p className="mt-1.5 text-[11px] text-ink-3">Halal only matches restaurants that state it (e.g. on OpenStreetMap). Vegetarian/vegan uses the restaurant’s label, else is inferred from estimated ingredients — always confirm when ordering.</p>
+          </div>
+          <div>
+            <p className="mb-1.5 text-xs font-medium text-ink-2">Sort by</p>
+            <div className="flex flex-wrap gap-1.5">
+              {([["score", "Best fit for my goal"], ["protein_density", "Protein per kcal"], ["protein", "Most protein"], ["kcal", "Fewest kcal"], ["distance", "Nearest"]] as const).map(([id, label]) => (
+                <button key={id} className={chip((f?.sort ?? "score") === id)} onClick={() => setO({ sort: id })}>{label}</button>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {f && (
+        <p className="mt-3 text-xs text-ink-2">
+          {[
+            f.text && `“${f.text}”`,
+            f.minProtein && `≥ ${f.minProtein} g protein`,
+            f.maxKcal && `≤ ${f.maxKcal} kcal`,
+            f.minKcal && `≥ ${f.minKcal} kcal`,
+            f.maxDistanceKm && `within ${f.maxDistanceKm} km`,
+            f.vegetarian && "vegetarian",
+            f.vegan && "vegan",
+            f.halal && "halal",
+            f.withinBudget && `within ${Math.round(data!.remainingKcal)} kcal left today`,
+          ].filter(Boolean).join(" · ") || "All meals nearby"}
+          {location && <span className="text-ink-3"> · near {location.label}</span>}
+        </p>
+      )}
+      {!location && ready && (
+        <p className="mt-3 flex items-center gap-1 text-xs text-ink-2"><MapPin size={13} />Searching around Oslo sentrum. <Link href="/" className="underline">Set your location</Link></p>
+      )}
+
+      {error && <p className="mt-4 rounded-xl bg-warn-soft p-3 text-sm text-warn" role="alert">{error}</p>}
+      {data?.pending && <p className="mt-3 flex items-center gap-2 text-xs text-ink-3"><Loader2 size={12} className="animate-spin" />Still loading live restaurant data for this area…</p>}
+      {data?.liveError && <p className="mt-3 rounded-xl bg-warn-soft px-3 py-2 text-xs text-warn">{data.liveError}</p>}
+
+      <div className="mt-4">
+        {loading && !data ? (
+          <div className="space-y-2">{Array.from({ length: 4 }, (_, i) => <div key={i} className="h-32 animate-pulse rounded-[20px] bg-surface-2" />)}</div>
+        ) : data ? (
+          <>
+            <p className="mb-2 flex items-center gap-2 text-xs text-ink-3">
+              {loading && <Loader2 size={12} className="animate-spin" />}
+              {data.results.length} meals from {data.scanned.withMenus} restaurants with menu data ({data.scanned.restaurants} places scanned)
+            </p>
+            <ul className="space-y-2">
+              {data.results.map((r) => (
+                <li key={r.meal.id}>
+                  <MealRow
+                    meal={r.meal}
+                    onOpen={() => setOpen(r)}
+                    extra={
+                      <div className="mt-2 flex flex-wrap items-center gap-x-2 gap-y-1 border-t border-line pt-2 text-[11px] text-ink-2">
+                        <span className="font-medium text-ink">{r.meal.restaurant.name}</span>
+                        <span>{formatDistance(r.distanceM)}</span>
+                        <span className="tabular rounded bg-surface-2 px-1.5 py-0.5 font-medium text-ink">Fit {r.score}</span>
+                        {r.reasons.slice(0, 2).map((x) => <span key={x}>· {x}</span>)}
+                      </div>
+                    }
+                  />
+                </li>
+              ))}
+            </ul>
+            {data.results.length === 0 && (
+              <p className="card p-6 text-center text-sm text-ink-2">No meals with nutrition data match these filters. Try relaxing them or a larger distance.</p>
+            )}
+            {data.noMenuMatches.length > 0 && (
+              <section className="mt-6">
+                <h2 className="mb-2 text-xs font-semibold uppercase tracking-wider text-ink-3">Matching places without menu data yet</h2>
+                <ul className="divide-y divide-line overflow-hidden rounded-[20px] border border-line bg-surface">
+                  {data.noMenuMatches.map((r) => (
+                    <li key={r.id}>
+                      <Link href={`/r/${encodeURIComponent(r.id)}`} className="flex items-center justify-between px-4 py-3 text-sm hover:bg-surface-2">
+                        <span><span className="font-medium">{r.name}</span> <span className="text-xs text-ink-2">{r.cuisines.slice(0, 2).map(cuisineLabel).join(", ")}</span></span>
+                        <span className="text-xs text-ink-3">{formatDistance(r.distanceM)} · add a dish</span>
+                      </Link>
+                    </li>
+                  ))}
+                </ul>
+              </section>
+            )}
+          </>
+        ) : null}
+      </div>
+      {open && <MealSheet meal={open.meal} onClose={() => setOpen(null)} />}
+    </div>
+  );
+}

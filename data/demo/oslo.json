@@ -1,0 +1,119 @@
+{
+  "_note": "ILLUSTRATIVE DEMO DATA. Fictional restaurants at approximate Oslo locations. Menus contain names, descriptions and example prices only — no nutrition values. All nutrition shown for these items is computed by MacroMap's estimator from food-composition data and labelled as an estimate.",
+  "restaurants": [
+    {
+      "slug": "demo-kebab-grill",
+      "name": "Demo Kebab & Grill",
+      "lat": 59.9127, "lng": 10.7602,
+      "address": "Grønland (demo location), Oslo",
+      "cuisines": ["kebab", "turkish"],
+      "amenity": "fast_food",
+      "tags": { "halal": "yes", "takeaway": true },
+      "items": [
+        { "name": "Chicken kebab wrap", "description": "Grilled chicken, iceberg, tomato, cucumber, red onion and garlic sauce in a large wrap", "price": 159, "category": "Wraps" },
+        { "name": "Döner kebab in pita", "description": "Beef & lamb döner, salad and garlic sauce in pita bread", "price": 139, "category": "Pita" },
+        { "name": "Kebab plate with rice", "description": "Döner meat with rice, salad and garlic sauce", "price": 199, "category": "Plates" },
+        { "name": "Chicken kebab plate with fries", "description": "Grilled chicken with fries, salad and garlic sauce", "price": 199, "category": "Plates" },
+        { "name": "Falafel wrap", "description": "Falafel, hummus, tahini and salad in a wrap", "price": 139, "category": "Wraps", "diet": { "vegetarian": true } },
+        { "name": "Lentil soup", "description": "Red lentil soup with lemon and bread", "price": 89, "category": "Starters", "diet": { "vegetarian": true } }
+      ]
+    },
+    {
+      "slug": "demo-sushi-bar",
+      "name": "Demo Sushi Bar",
+      "lat": 59.9105, "lng": 10.7282,
+      "address": "Aker Brygge (demo location), Oslo",
+      "cuisines": ["sushi", "japanese"],
+      "amenity": "restaurant",
+      "tags": { "takeaway": true },
+      "items": [
+        { "name": "Salmon nigiri (8 pcs)", "description": "Fresh Norwegian salmon on seasoned rice", "price": 189, "category": "Nigiri" },
+        { "name": "Tuna nigiri (6 pcs)", "description": "Yellowfin tuna on seasoned rice", "price": 179, "category": "Nigiri" },
+        { "name": "Flamed salmon nigiri (8 pcs)", "description": "Aburi salmon with a touch of mayo", "price": 199, "category": "Nigiri" },
+        { "name": "California roll (8 pcs)", "description": "Surimi crab, avocado, cucumber, tobiko", "price": 149, "category": "Rolls" },
+        { "name": "Spicy salmon roll (8 pcs)", "description": "Salmon maki topped with spicy mayo", "price": 169, "category": "Rolls" },
+        { "name": "Avocado maki (8 pcs)", "description": "Avocado and cucumber", "price": 119, "category": "Rolls", "diet": { "vegetarian": true, "vegan": true } },
+        { "name": "Salmon poke bowl", "description": "Sushi rice, salmon, avocado, edamame, cucumber, carrot, sesame, soy dressing", "price": 179, "category": "Bowls" },
+        { "name": "Chicken teriyaki bowl", "description": "Chicken thigh, teriyaki sauce, rice and broccoli", "price": 169, "category": "Bowls" }
+      ]
+    },
+    {
+      "slug": "demo-boba-lab",
+      "name": "Demo Boba Lab",
+      "lat": 59.9138, "lng": 10.7448,
+      "address": "Sentrum (demo location), Oslo",
+      "cuisines": ["bubble_tea"],
+      "amenity": "cafe",
+      "tags": { "takeaway": true },
+      "items": [
+        { "name": "Classic milk tea with pearls", "description": "Black tea, milk, tapioca pearls", "price": 69, "category": "Milk tea" },
+        { "name": "Brown sugar milk tea", "description": "Fresh milk, brown sugar syrup and tapioca pearls", "price": 79, "category": "Milk tea" },
+        { "name": "Oat milk tea", "description": "Black tea with oat milk and tapioca pearls", "price": 75, "category": "Milk tea", "diet": { "vegan": true, "vegetarian": true } },
+        { "name": "Passion fruit green tea", "description": "Green tea, passion fruit, with pearls", "price": 65, "category": "Fruit tea" }
+      ]
+    },
+    {
+      "slug": "demo-burger-co",
+      "name": "Demo Burger Co.",
+      "lat": 59.9230, "lng": 10.7585,
+      "address": "Grünerløkka (demo location), Oslo",
+      "cuisines": ["burger", "american"],
+      "amenity": "restaurant",
+      "tags": {},
+      "items": [
+        { "name": "Classic cheeseburger", "description": "150 g beef patty, cheddar, lettuce, tomato, onion, pickles, burger sauce", "price": 179, "category": "Burgers" },
+        { "name": "Double bacon cheeseburger", "description": "Double beef patty, double cheddar, bacon, burger sauce", "price": 229, "category": "Burgers" },
+        { "name": "Grilled chicken burger", "description": "Grilled chicken breast, lettuce, tomato, mayo — no cheese", "price": 179, "category": "Burgers" },
+        { "name": "Crispy chicken burger with fries", "description": "Fried chicken fillet, cheddar, mayo and a side of fries", "price": 219, "category": "Burgers" },
+        { "name": "Veggie burger", "description": "Falafel patty, lettuce, tomato, vegan mayo", "price": 169, "category": "Burgers", "diet": { "vegetarian": true } }
+      ]
+    },
+    {
+      "slug": "demo-pizzeria",
+      "name": "Demo Pizzeria",
+      "lat": 59.9295, "lng": 10.7160,
+      "address": "Majorstuen (demo location), Oslo",
+      "cuisines": ["pizza", "italian"],
+      "amenity": "restaurant",
+      "tags": {},
+      "items": [
+        { "name": "Margherita pizza", "description": "Tomato, mozzarella, basil — 30 cm", "price": 169, "category": "Pizza", "diet": { "vegetarian": true } },
+        { "name": "Pepperoni pizza", "description": "Tomato, mozzarella, pepperoni — 30 cm", "price": 199, "category": "Pizza" },
+        { "name": "Chicken & mushroom pizza", "description": "Tomato, mozzarella, chicken, mushrooms — 30 cm", "price": 209, "category": "Pizza" },
+        { "name": "Chicken caesar salad", "description": "Romaine, grilled chicken, parmesan, croutons, caesar dressing", "price": 179, "category": "Salads" }
+      ]
+    },
+    {
+      "slug": "demo-wok-kitchen",
+      "name": "Demo Wok Kitchen",
+      "lat": 59.9072, "lng": 10.7535,
+      "address": "Bjørvika (demo location), Oslo",
+      "cuisines": ["thai", "asian"],
+      "amenity": "restaurant",
+      "tags": { "takeaway": true },
+      "items": [
+        { "name": "Pad thai with prawns", "description": "Rice noodles, prawns, egg, peanuts, spring onion", "price": 199, "category": "Wok" },
+        { "name": "Chicken pad thai", "description": "Rice noodles, chicken, egg, spring onion", "price": 189, "category": "Wok" },
+        { "name": "Beef egg noodles", "description": "Wok-fried egg noodles with beef and vegetables", "price": 199, "category": "Wok" },
+        { "name": "Tofu fried rice", "description": "Wok-fried rice with tofu, egg and vegetables", "price": 169, "category": "Wok", "diet": { "vegetarian": true } },
+        { "name": "Green curry with chicken", "description": "Coconut green curry, Thai basil, jasmine rice", "price": 209, "category": "Curry" }
+      ]
+    },
+    {
+      "slug": "demo-cafe",
+      "name": "Demo Café",
+      "lat": 59.9268, "lng": 10.7395,
+      "address": "St. Hanshaugen (demo location), Oslo",
+      "cuisines": ["coffee_shop", "cafe"],
+      "amenity": "cafe",
+      "tags": {},
+      "items": [
+        { "name": "Caffè latte", "description": "Double espresso with steamed whole milk", "price": 58, "category": "Coffee", "diet": { "vegetarian": true } },
+        { "name": "Oat latte", "description": "Double espresso with oat milk", "price": 62, "category": "Coffee", "diet": { "vegetarian": true, "vegan": true } },
+        { "name": "Flat white", "description": "Double ristretto, whole milk", "price": 56, "category": "Coffee", "diet": { "vegetarian": true } },
+        { "name": "Salmon salad bowl", "description": "Roasted salmon, leafy greens, tomato, avocado, oil & vinegar", "price": 165, "category": "Lunch" },
+        { "name": "Cinnamon bun", "description": "Freshly baked Norwegian kanelbolle", "price": 45, "category": "Bakery", "diet": { "vegetarian": true } }
+      ]
+    }
+  ]
+}
