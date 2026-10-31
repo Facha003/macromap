@@ -366,7 +366,7 @@ async function askGemini(item: Item, place: Place): Promise<EstimateBasis | null
       contents: [{ role: "user", parts: [{ text: user }] }],
       generationConfig: { temperature: 0.2, responseMimeType: "application/json" },
     }),
-    signal: AbortSignal.timeout(25_000),
+    signal: AbortSignal.timeout(15_000),
   });
   if (!res.ok) throw new Error(`Gemini HTTP ${res.status}`);
   const json = await res.json();
@@ -510,12 +510,15 @@ export const backend: Backend = {
     let ai: EstimateBasis | null = null;
     let model = "";
     let failure = "";
-    if (hasKey) {
+    // Skip a Gemini key that recently failed (quota used up / timeouts) so users don't wait on it every time.
+    const geminiDownUntil = load<number>("geminiDownUntil", 0);
+    if (hasKey && Date.now() > geminiDownUntil) {
       try {
         ai = await askGemini(item, place);
         model = geminiModel();
       } catch (e) {
         failure = (e as Error).message;
+        save("geminiDownUntil", Date.now() + 3600_000);
       }
     }
     if (!ai && unavailable) {
@@ -527,7 +530,7 @@ export const backend: Backend = {
       }
     }
     const template = current.basis;
-    if (!ai) return { basis: template, aiNote: failure ? `AI estimation failed (${failure}).` : null };
+    if (!ai) return { basis: template, aiNote: failure ? `AI estimation failed (${failure}). Try again in a minute.` : null };
     const chosen = ai.kind === "unavailable" && template.kind === "archetype" ? template : ai;
     remember(chosen, chosen === ai ? model : "ai-fallback");
     return { basis: chosen, aiNote: chosen === ai ? null : "The AI couldn't work this dish out — showing a template estimate." };

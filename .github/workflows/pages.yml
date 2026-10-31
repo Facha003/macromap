@@ -25,7 +25,8 @@ permissions:
 
 concurrency:
   group: pages
-  cancel-in-progress: true
+  # Queue instead of cancelling, so a push never kills a long menu crawl.
+  cancel-in-progress: false
 
 jobs:
   build:
