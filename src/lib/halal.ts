@@ -36,7 +36,7 @@ export function halalStatus(r: HalalSubject, report?: HalalReport | null): { sta
 
 export const isHalalOption = (s: HalalStatus) => s === "confirmed" || s === "likely";
 
-const PORK = new Set<FoodKey>(["bacon_fried", "ham_boiled", "pepperoni"]);
+const PORK = new Set<FoodKey>(["bacon_fried", "ham_boiled", "pepperoni", "pork_tenderloin_roasted", "ref_pasta_carbonara"]);
 
 /** True if the estimated recipe contains pork products. */
 export function containsPork(components: Component[]): boolean {

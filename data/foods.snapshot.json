@@ -1,5 +1,5 @@
 {
- "generatedAt": "2026-10-31T09:27:13.495Z",
+ "generatedAt": "2026-10-31T12:31:59.848Z",
  "attribution": {
   "mvt": "Matvaretabellen, Norwegian Food Safety Authority (Mattilsynet) — CC BY 4.0 — matvaretabellen.no",
   "usda": "USDA FoodData Central, U.S. Department of Agriculture — public domain — fdc.nal.usda.gov"
@@ -28,7 +28,7 @@
      "grams": 150
     }
    ],
-   "retrievedAt": "2026-10-31T09:27:13.495Z"
+   "retrievedAt": "2026-10-31T12:31:59.848Z"
   },
   "chicken_thigh_roasted": {
    "key": "chicken_thigh_roasted",
@@ -57,7 +57,7 @@
      "grams": 60
     }
    ],
-   "retrievedAt": "2026-10-31T09:27:13.495Z"
+   "retrievedAt": "2026-10-31T12:31:59.848Z"
   },
   "chicken_fillet_fried": {
    "key": "chicken_fillet_fried",
@@ -82,7 +82,7 @@
      "grams": 150
     }
    ],
-   "retrievedAt": "2026-10-31T09:27:13.495Z"
+   "retrievedAt": "2026-10-31T12:31:59.848Z"
   },
   "kebab_meat": {
    "key": "kebab_meat",
@@ -102,7 +102,7 @@
     "sodiumMg": 880
    },
    "portions": [],
-   "retrievedAt": "2026-10-31T09:27:13.495Z"
+   "retrievedAt": "2026-10-31T12:31:59.848Z"
   },
   "beef_mince_fried": {
    "key": "beef_mince_fried",
@@ -127,7 +127,7 @@
      "grams": 280
     }
    ],
-   "retrievedAt": "2026-10-31T09:27:13.495Z"
+   "retrievedAt": "2026-10-31T12:31:59.848Z"
   },
   "beef_patty_raw": {
    "key": "beef_patty_raw",
@@ -152,7 +152,7 @@
      "grams": 100
     }
    ],
-   "retrievedAt": "2026-10-31T09:27:13.495Z"
+   "retrievedAt": "2026-10-31T12:31:59.848Z"
   },
   "beef_striploin_roasted": {
    "key": "beef_striploin_roasted",
@@ -177,7 +177,7 @@
      "grams": 150
     }
    ],
-   "retrievedAt": "2026-10-31T09:27:13.495Z"
+   "retrievedAt": "2026-10-31T12:31:59.848Z"
   },
   "lamb_mince_fried": {
    "key": "lamb_mince_fried",
@@ -197,7 +197,7 @@
     "sodiumMg": 95
    },
    "portions": [],
-   "retrievedAt": "2026-10-31T09:27:13.495Z"
+   "retrievedAt": "2026-10-31T12:31:59.848Z"
   },
   "salmon_raw": {
    "key": "salmon_raw",
@@ -226,7 +226,7 @@
      "grams": 175
     }
    ],
-   "retrievedAt": "2026-10-31T09:27:13.495Z"
+   "retrievedAt": "2026-10-31T12:31:59.848Z"
   },
   "salmon_roasted": {
    "key": "salmon_roasted",
@@ -255,7 +255,7 @@
      "grams": 115
     }
    ],
-   "retrievedAt": "2026-10-31T09:27:13.495Z"
+   "retrievedAt": "2026-10-31T12:31:59.848Z"
   },
   "tuna_raw": {
    "key": "tuna_raw",
@@ -280,7 +280,7 @@
      "grams": 20
     }
    ],
-   "retrievedAt": "2026-10-31T09:27:13.495Z"
+   "retrievedAt": "2026-10-31T12:31:59.848Z"
   },
   "king_prawn_raw": {
    "key": "king_prawn_raw",
@@ -305,7 +305,7 @@
      "grams": 17
     }
    ],
-   "retrievedAt": "2026-10-31T09:27:13.495Z"
+   "retrievedAt": "2026-10-31T12:31:59.848Z"
   },
   "tofu": {
    "key": "tofu",
@@ -330,7 +330,7 @@
      "grams": 100
     }
    ],
-   "retrievedAt": "2026-10-31T09:27:13.495Z"
+   "retrievedAt": "2026-10-31T12:31:59.848Z"
   },
   "falafel": {
    "key": "falafel",
@@ -350,7 +350,7 @@
     "sodiumMg": 281
    },
    "portions": [],
-   "retrievedAt": "2026-10-31T09:27:13.495Z"
+   "retrievedAt": "2026-10-31T12:31:59.848Z"
   },
   "egg_boiled": {
    "key": "egg_boiled",
@@ -375,7 +375,7 @@
      "grams": 56
     }
    ],
-   "retrievedAt": "2026-10-31T09:27:13.495Z"
+   "retrievedAt": "2026-10-31T12:31:59.848Z"
   },
   "bacon_fried": {
    "key": "bacon_fried",
@@ -395,7 +395,7 @@
     "sodiumMg": 99
    },
    "portions": [],
-   "retrievedAt": "2026-10-31T09:27:13.495Z"
+   "retrievedAt": "2026-10-31T12:31:59.848Z"
   },
   "pepperoni": {
    "key": "pepperoni",
@@ -415,7 +415,7 @@
     "sodiumMg": 957
    },
    "portions": [],
-   "retrievedAt": "2026-10-31T09:27:13.495Z"
+   "retrievedAt": "2026-10-31T12:31:59.848Z"
   },
   "ham_boiled": {
    "key": "ham_boiled",
@@ -440,7 +440,7 @@
      "grams": 12
     }
    ],
-   "retrievedAt": "2026-10-31T09:27:13.495Z"
+   "retrievedAt": "2026-10-31T12:31:59.848Z"
   },
   "edamame": {
    "key": "edamame",
@@ -460,7 +460,185 @@
     "sodiumMg": 6
    },
    "portions": [],
-   "retrievedAt": "2026-10-31T09:27:13.495Z"
+   "retrievedAt": "2026-10-31T12:31:59.848Z"
+  },
+  "cod_roasted": {
+   "key": "cod_roasted",
+   "label": "Cod fillet, roasted",
+   "group": "protein",
+   "source": "mvt",
+   "sourceId": "04.345",
+   "sourceName": "Cod, fillet, roasted",
+   "sourceUrl": "https://www.matvaretabellen.no/en/cod-fillet-roasted/",
+   "per100g": {
+    "kcal": 142,
+    "protein": 22.1,
+    "carbs": 0,
+    "fat": 6,
+    "fiber": 0,
+    "sugar": 0,
+    "sodiumMg": 100
+   },
+   "portions": [
+    {
+     "name": "pcs",
+     "grams": 95
+    },
+    {
+     "name": "portion",
+     "grams": 200
+    }
+   ],
+   "retrievedAt": "2026-10-31T12:31:59.848Z"
+  },
+  "halibut_simmered": {
+   "key": "halibut_simmered",
+   "label": "Halibut, simmered",
+   "group": "protein",
+   "source": "mvt",
+   "sourceId": "04.222",
+   "sourceName": "Halibut, Atlantic, slices, simmered",
+   "sourceUrl": "https://www.matvaretabellen.no/en/halibut-atlantic-slices-simmered/",
+   "per100g": {
+    "kcal": 149,
+    "protein": 21.3,
+    "carbs": 0,
+    "fat": 7.1,
+    "fiber": 0,
+    "sugar": 0,
+    "sodiumMg": 89
+   },
+   "portions": [
+    {
+     "name": "portion",
+     "grams": 150
+    }
+   ],
+   "retrievedAt": "2026-10-31T12:31:59.848Z"
+  },
+  "scallop_fried": {
+   "key": "scallop_fried",
+   "label": "Scallops, fried",
+   "group": "protein",
+   "source": "mvt",
+   "sourceId": "04.264",
+   "sourceName": "Scallop, fried",
+   "sourceUrl": "https://www.matvaretabellen.no/en/scallop-fried/",
+   "per100g": {
+    "kcal": 42,
+    "protein": 9.3,
+    "carbs": 0,
+    "fat": 0.5,
+    "fiber": 0,
+    "sugar": 0,
+    "sodiumMg": 539
+   },
+   "portions": [],
+   "retrievedAt": "2026-10-31T12:31:59.848Z"
+  },
+  "duck_roasted": {
+   "key": "duck_roasted",
+   "label": "Duck, roasted",
+   "group": "protein",
+   "source": "mvt",
+   "sourceId": "03.232",
+   "sourceName": "Duck, without skin, roasted",
+   "sourceUrl": "https://www.matvaretabellen.no/en/duck-without-skin-roasted/",
+   "per100g": {
+    "kcal": 248,
+    "protein": 46.7,
+    "carbs": 0,
+    "fat": 6.8,
+    "fiber": 0,
+    "sugar": 0,
+    "sodiumMg": 246
+   },
+   "portions": [
+    {
+     "name": "portion",
+     "grams": 150
+    }
+   ],
+   "retrievedAt": "2026-10-31T12:31:59.848Z"
+  },
+  "pork_tenderloin_roasted": {
+   "key": "pork_tenderloin_roasted",
+   "label": "Pork tenderloin, roasted",
+   "group": "protein",
+   "source": "mvt",
+   "sourceId": "03.492",
+   "sourceName": "Pork, tenderloin, roasted without fat",
+   "sourceUrl": "https://www.matvaretabellen.no/en/pork-tenderloin-roasted-without-fat/",
+   "per100g": {
+    "kcal": 151,
+    "protein": 29.1,
+    "carbs": 0.2,
+    "fat": 3.7,
+    "fiber": 0,
+    "sugar": 0.2,
+    "sodiumMg": 55
+   },
+   "portions": [
+    {
+     "name": "portion",
+     "grams": 150
+    }
+   ],
+   "retrievedAt": "2026-10-31T12:31:59.848Z"
+  },
+  "lamb_roasted": {
+   "key": "lamb_roasted",
+   "label": "Lamb leg, roasted",
+   "group": "protein",
+   "source": "mvt",
+   "sourceId": "03.265",
+   "sourceName": "Lamb, leg, roasted",
+   "sourceUrl": "https://www.matvaretabellen.no/en/lamb-leg-roasted/",
+   "per100g": {
+    "kcal": 214,
+    "protein": 33.8,
+    "carbs": 0.2,
+    "fat": 8.7,
+    "fiber": 0,
+    "sugar": 0.2,
+    "sodiumMg": 95
+   },
+   "portions": [
+    {
+     "name": "portion",
+     "grams": 150
+    }
+   ],
+   "retrievedAt": "2026-10-31T12:31:59.848Z"
+  },
+  "black_beans": {
+   "key": "black_beans",
+   "label": "Black beans, canned",
+   "group": "protein",
+   "source": "mvt",
+   "sourceId": "06.132",
+   "sourceName": "Beans, black, canned",
+   "sourceUrl": "https://www.matvaretabellen.no/en/beans-black-canned/",
+   "per100g": {
+    "kcal": 70,
+    "protein": 6.6,
+    "carbs": 4.3,
+    "fat": 1,
+    "fiber": 9,
+    "sugar": 0.9,
+    "sodiumMg": 160
+   },
+   "portions": [
+    {
+     "name": "decilitre",
+     "grams": 90
+    },
+    {
+     "name": "tablespoon",
+     "grams": 15
+    }
+   ],
+   "retrievedAt": "2026-10-31T12:31:59.848Z"
   },
   "chickpeas_boiled": {
    "key": "chickpeas_boiled",
@@ -480,7 +658,7 @@
     "sodiumMg": 1
    },
    "portions": [],
-   "retrievedAt": "2026-10-31T09:27:13.495Z"
+   "retrievedAt": "2026-10-31T12:31:59.848Z"
   },
   "lentils_cooked": {
    "key": "lentils_cooked",
@@ -505,7 +683,7 @@
      "grams": 215
     }
    ],
-   "retrievedAt": "2026-10-31T09:27:13.495Z"
+   "retrievedAt": "2026-10-31T12:31:59.848Z"
   },
   "paneer": {
    "key": "paneer",
@@ -525,7 +703,7 @@
     "sodiumMg": 19
    },
    "portions": [],
-   "retrievedAt": "2026-10-31T09:27:13.495Z"
+   "retrievedAt": "2026-10-31T12:31:59.848Z"
   },
   "halloumi": {
    "key": "halloumi",
@@ -545,7 +723,7 @@
     "sodiumMg": 1680
    },
    "portions": [],
-   "retrievedAt": "2026-10-31T09:27:13.495Z"
+   "retrievedAt": "2026-10-31T12:31:59.848Z"
   },
   "rice_white_cooked": {
    "key": "rice_white_cooked",
@@ -570,7 +748,7 @@
      "grams": 160
     }
    ],
-   "retrievedAt": "2026-10-31T09:27:13.495Z"
+   "retrievedAt": "2026-10-31T12:31:59.848Z"
   },
   "sushi_rice_cooked": {
    "key": "sushi_rice_cooked",
@@ -590,7 +768,7 @@
     "sodiumMg": 280
    },
    "portions": [],
-   "retrievedAt": "2026-10-31T09:27:13.495Z"
+   "retrievedAt": "2026-10-31T12:31:59.848Z"
   },
   "pita_bread": {
    "key": "pita_bread",
@@ -615,7 +793,7 @@
      "grams": 75
     }
    ],
-   "retrievedAt": "2026-10-31T09:27:13.495Z"
+   "retrievedAt": "2026-10-31T12:31:59.848Z"
   },
   "tortilla_wheat": {
    "key": "tortilla_wheat",
@@ -644,7 +822,7 @@
      "grams": 40
     }
    ],
-   "retrievedAt": "2026-10-31T09:27:13.495Z"
+   "retrievedAt": "2026-10-31T12:31:59.848Z"
   },
   "burger_bun": {
    "key": "burger_bun",
@@ -669,7 +847,7 @@
      "grams": 80
     }
    ],
-   "retrievedAt": "2026-10-31T09:27:13.495Z"
+   "retrievedAt": "2026-10-31T12:31:59.848Z"
   },
   "pizza_crust": {
    "key": "pizza_crust",
@@ -694,7 +872,7 @@
      "grams": 550
     }
    ],
-   "retrievedAt": "2026-10-31T09:27:13.495Z"
+   "retrievedAt": "2026-10-31T12:31:59.848Z"
   },
   "noodles_wheat_cooked": {
    "key": "noodles_wheat_cooked",
@@ -719,7 +897,7 @@
      "grams": 180
     }
    ],
-   "retrievedAt": "2026-10-31T09:27:13.495Z"
+   "retrievedAt": "2026-10-31T12:31:59.848Z"
   },
   "rice_noodles_cooked": {
    "key": "rice_noodles_cooked",
@@ -744,7 +922,7 @@
      "grams": 180
     }
    ],
-   "retrievedAt": "2026-10-31T09:27:13.495Z"
+   "retrievedAt": "2026-10-31T12:31:59.848Z"
   },
   "bulgur_cooked": {
    "key": "bulgur_cooked",
@@ -769,7 +947,7 @@
      "grams": 225
     }
    ],
-   "retrievedAt": "2026-10-31T09:27:13.495Z"
+   "retrievedAt": "2026-10-31T12:31:59.848Z"
   },
   "quinoa_cooked": {
    "key": "quinoa_cooked",
@@ -794,7 +972,7 @@
      "grams": 185
     }
    ],
-   "retrievedAt": "2026-10-31T09:27:13.495Z"
+   "retrievedAt": "2026-10-31T12:31:59.848Z"
   },
   "french_fries": {
    "key": "french_fries",
@@ -819,7 +997,276 @@
      "grams": 135
     }
    ],
-   "retrievedAt": "2026-10-31T09:27:13.495Z"
+   "retrievedAt": "2026-10-31T12:31:59.848Z"
+  },
+  "potatoes_boiled": {
+   "key": "potatoes_boiled",
+   "label": "Potatoes, boiled",
+   "group": "carb",
+   "source": "mvt",
+   "sourceId": "06.262",
+   "sourceName": "Potatoes, autumn, boiled",
+   "sourceUrl": "https://www.matvaretabellen.no/en/potatoes-autumn-boiled/",
+   "per100g": {
+    "kcal": 84,
+    "protein": 2.1,
+    "carbs": 17.8,
+    "fat": 0.1,
+    "fiber": 2,
+    "sugar": 3.4,
+    "sodiumMg": 1
+   },
+   "portions": [
+    {
+     "name": "portion",
+     "grams": 170
+    },
+    {
+     "name": "pcs (large)",
+     "grams": 100
+    },
+    {
+     "name": "pcs (small)",
+     "grams": 30
+    },
+    {
+     "name": "pcs (medium)",
+     "grams": 55
+    }
+   ],
+   "retrievedAt": "2026-10-31T12:31:59.848Z"
+  },
+  "potatoes_mashed": {
+   "key": "potatoes_mashed",
+   "label": "Mashed potatoes, home-made",
+   "group": "carb",
+   "source": "mvt",
+   "sourceId": "06.223",
+   "sourceName": "Potatoes, mashed, home-made",
+   "sourceUrl": "https://www.matvaretabellen.no/en/potatoes-mashed-home-made/",
+   "per100g": {
+    "kcal": 144,
+    "protein": 2.4,
+    "carbs": 15.7,
+    "fat": 7.6,
+    "fiber": 2,
+    "sugar": 2.2,
+    "sodiumMg": 369
+   },
+   "portions": [
+    {
+     "name": "portion",
+     "grams": 200
+    }
+   ],
+   "retrievedAt": "2026-10-31T12:31:59.848Z"
+  },
+  "pasta_cooked": {
+   "key": "pasta_cooked",
+   "label": "Pasta, cooked",
+   "group": "carb",
+   "source": "mvt",
+   "sourceId": "05.130",
+   "sourceName": "Pasta, plain, cooked",
+   "sourceUrl": "https://www.matvaretabellen.no/en/pasta-plain-cooked/",
+   "per100g": {
+    "kcal": 133,
+    "protein": 4.2,
+    "carbs": 23.6,
+    "fat": 2.1,
+    "fiber": 1,
+    "sugar": 0.2,
+    "sodiumMg": 198
+   },
+   "portions": [
+    {
+     "name": "portion",
+     "grams": 195
+    }
+   ],
+   "retrievedAt": "2026-10-31T12:31:59.848Z"
+  },
+  "basmati_cooked": {
+   "key": "basmati_cooked",
+   "label": "Basmati rice, cooked",
+   "group": "carb",
+   "source": "mvt",
+   "sourceId": "05.337",
+   "sourceName": "Rice, Basmati, cooked",
+   "sourceUrl": "https://www.matvaretabellen.no/en/rice-basmati-cooked/",
+   "per100g": {
+    "kcal": 115,
+    "protein": 3,
+    "carbs": 25,
+    "fat": 0.3,
+    "fiber": 0.2,
+    "sugar": 0.1,
+    "sodiumMg": 0
+   },
+   "portions": [
+    {
+     "name": "portion",
+     "grams": 160
+    }
+   ],
+   "retrievedAt": "2026-10-31T12:31:59.848Z"
+  },
+  "flatbread_soft": {
+   "key": "flatbread_soft",
+   "label": "Soft wheat flatbread (naan-style)",
+   "group": "carb",
+   "source": "mvt",
+   "sourceId": "05.385",
+   "sourceName": "Flatbread, soft, wheat",
+   "sourceUrl": "https://www.matvaretabellen.no/en/flatbread-soft-wheat/",
+   "per100g": {
+    "kcal": 314,
+    "protein": 9.6,
+    "carbs": 55.7,
+    "fat": 5,
+    "fiber": 3,
+    "sugar": 5.4,
+    "sodiumMg": 279
+   },
+   "portions": [
+    {
+     "name": "pcs",
+     "grams": 38
+    }
+   ],
+   "retrievedAt": "2026-10-31T12:31:59.848Z"
+  },
+  "bread_roll": {
+   "key": "bread_roll",
+   "label": "White bread roll",
+   "group": "carb",
+   "source": "mvt",
+   "sourceId": "05.300",
+   "sourceName": "Rolls, white, 100 % wheat flour, water",
+   "sourceUrl": "https://www.matvaretabellen.no/en/rolls-white-100-wheat-flour-water/",
+   "per100g": {
+    "kcal": 260,
+    "protein": 8,
+    "carbs": 43.8,
+    "fat": 5.2,
+    "fiber": 3,
+    "sugar": 0.2,
+    "sodiumMg": 174
+   },
+   "portions": [
+    {
+     "name": "pcs",
+     "grams": 45
+    }
+   ],
+   "retrievedAt": "2026-10-31T12:31:59.848Z"
+  },
+  "baguette": {
+   "key": "baguette",
+   "label": "Baguette",
+   "group": "carb",
+   "source": "mvt",
+   "sourceId": "05.455",
+   "sourceName": "Baguette, coarse, home-made",
+   "sourceUrl": "https://www.matvaretabellen.no/en/baguette-coarse-home-made/",
+   "per100g": {
+    "kcal": 239,
+    "protein": 8.4,
+    "carbs": 42.3,
+    "fat": 2.9,
+    "fiber": 5,
+    "sugar": 0.8,
+    "sodiumMg": 181
+   },
+   "portions": [],
+   "retrievedAt": "2026-10-31T12:31:59.848Z"
+  },
+  "tortilla_chips": {
+   "key": "tortilla_chips",
+   "label": "Tortilla chips",
+   "group": "carb",
+   "source": "mvt",
+   "sourceId": "12.017",
+   "sourceName": "Tortilla chips",
+   "sourceUrl": "https://www.matvaretabellen.no/en/tortilla-chips/",
+   "per100g": {
+    "kcal": 475,
+    "protein": 7.4,
+    "carbs": 57.4,
+    "fat": 22.5,
+    "fiber": 7,
+    "sugar": 1.9,
+    "sodiumMg": 545
+   },
+   "portions": [
+    {
+     "name": "package (large)",
+     "grams": 200
+    },
+    {
+     "name": "pcs",
+     "grams": 3
+    },
+    {
+     "name": "package (small)",
+     "grams": 150
+    }
+   ],
+   "retrievedAt": "2026-10-31T12:31:59.848Z"
+  },
+  "pancakes": {
+   "key": "pancakes",
+   "label": "Pancakes, fried",
+   "group": "carb",
+   "source": "mvt",
+   "sourceId": "05.514",
+   "sourceName": "Pancakes, fried in fat",
+   "sourceUrl": "https://www.matvaretabellen.no/en/pancakes-fried-in-fat/",
+   "per100g": {
+    "kcal": 182,
+    "protein": 8.1,
+    "carbs": 23.8,
+    "fat": 5.7,
+    "fiber": 1,
+    "sugar": 4.1,
+    "sodiumMg": 301
+   },
+   "portions": [
+    {
+     "name": "pcs",
+     "grams": 65
+    }
+   ],
+   "retrievedAt": "2026-10-31T12:31:59.848Z"
+  },
+  "waffles": {
+   "key": "waffles",
+   "label": "Waffles",
+   "group": "carb",
+   "source": "mvt",
+   "sourceId": "05.247",
+   "sourceName": "Waffles, with egg",
+   "sourceUrl": "https://www.matvaretabellen.no/en/waffles-with-egg/",
+   "per100g": {
+    "kcal": 212,
+    "protein": 7.3,
+    "carbs": 26,
+    "fat": 8.5,
+    "fiber": 1,
+    "sugar": 6.9,
+    "sodiumMg": 181
+   },
+   "portions": [
+    {
+     "name": "pcs (large)",
+     "grams": 85
+    },
+    {
+     "name": "pcs (small)",
+     "grams": 20
+    }
+   ],
+   "retrievedAt": "2026-10-31T12:31:59.848Z"
   },
   "croissant": {
    "key": "croissant",
@@ -848,7 +1295,7 @@
      "grams": 80
     }
    ],
-   "retrievedAt": "2026-10-31T09:27:13.495Z"
+   "retrievedAt": "2026-10-31T12:31:59.848Z"
   },
   "cinnamon_roll": {
    "key": "cinnamon_roll",
@@ -873,7 +1320,7 @@
      "grams": 65
     }
    ],
-   "retrievedAt": "2026-10-31T09:27:13.495Z"
+   "retrievedAt": "2026-10-31T12:31:59.848Z"
   },
   "sweet_potato_roasted": {
    "key": "sweet_potato_roasted",
@@ -893,7 +1340,7 @@
     "sodiumMg": 76
    },
    "portions": [],
-   "retrievedAt": "2026-10-31T09:27:13.495Z"
+   "retrievedAt": "2026-10-31T12:31:59.848Z"
   },
   "tapioca_pearl_dry": {
    "key": "tapioca_pearl_dry",
@@ -913,7 +1360,7 @@
     "sodiumMg": 1
    },
    "portions": [],
-   "retrievedAt": "2026-10-31T09:27:13.495Z"
+   "retrievedAt": "2026-10-31T12:31:59.848Z"
   },
   "lettuce_iceberg": {
    "key": "lettuce_iceberg",
@@ -946,7 +1393,7 @@
      "grams": 25
     }
    ],
-   "retrievedAt": "2026-10-31T09:27:13.495Z"
+   "retrievedAt": "2026-10-31T12:31:59.848Z"
   },
   "tomato_raw": {
    "key": "tomato_raw",
@@ -975,7 +1422,7 @@
      "grams": 13
     }
    ],
-   "retrievedAt": "2026-10-31T09:27:13.495Z"
+   "retrievedAt": "2026-10-31T12:31:59.848Z"
   },
   "cucumber": {
    "key": "cucumber",
@@ -1008,7 +1455,7 @@
      "grams": 55
     }
    ],
-   "retrievedAt": "2026-10-31T09:27:13.495Z"
+   "retrievedAt": "2026-10-31T12:31:59.848Z"
   },
   "onion_raw": {
    "key": "onion_raw",
@@ -1037,7 +1484,7 @@
      "grams": 55
     }
    ],
-   "retrievedAt": "2026-10-31T09:27:13.495Z"
+   "retrievedAt": "2026-10-31T12:31:59.848Z"
   },
   "red_cabbage": {
    "key": "red_cabbage",
@@ -1066,7 +1513,7 @@
      "grams": 1200
     }
    ],
-   "retrievedAt": "2026-10-31T09:27:13.495Z"
+   "retrievedAt": "2026-10-31T12:31:59.848Z"
   },
   "avocado": {
    "key": "avocado",
@@ -1095,7 +1542,7 @@
      "grams": 130
     }
    ],
-   "retrievedAt": "2026-10-31T09:27:13.495Z"
+   "retrievedAt": "2026-10-31T12:31:59.848Z"
   },
   "sweet_pepper": {
    "key": "sweet_pepper",
@@ -1124,7 +1571,7 @@
      "grams": 145
     }
    ],
-   "retrievedAt": "2026-10-31T09:27:13.495Z"
+   "retrievedAt": "2026-10-31T12:31:59.848Z"
   },
   "jalapeno": {
    "key": "jalapeno",
@@ -1149,7 +1596,7 @@
      "grams": 14
     }
    ],
-   "retrievedAt": "2026-10-31T09:27:13.495Z"
+   "retrievedAt": "2026-10-31T12:31:59.848Z"
   },
   "broccoli_cooked": {
    "key": "broccoli_cooked",
@@ -1178,7 +1625,7 @@
      "grams": 28
     }
    ],
-   "retrievedAt": "2026-10-31T09:27:13.495Z"
+   "retrievedAt": "2026-10-31T12:31:59.848Z"
   },
   "mushroom": {
    "key": "mushroom",
@@ -1207,7 +1654,7 @@
      "grams": 35
     }
    ],
-   "retrievedAt": "2026-10-31T09:27:13.495Z"
+   "retrievedAt": "2026-10-31T12:31:59.848Z"
   },
   "spring_onion": {
    "key": "spring_onion",
@@ -1236,7 +1683,7 @@
      "grams": 19
     }
    ],
-   "retrievedAt": "2026-10-31T09:27:13.495Z"
+   "retrievedAt": "2026-10-31T12:31:59.848Z"
   },
   "carrot": {
    "key": "carrot",
@@ -1261,7 +1708,7 @@
      "grams": 80
     }
    ],
-   "retrievedAt": "2026-10-31T09:27:13.495Z"
+   "retrievedAt": "2026-10-31T12:31:59.848Z"
   },
   "olives_black": {
    "key": "olives_black",
@@ -1294,7 +1741,7 @@
      "grams": 50
     }
    ],
-   "retrievedAt": "2026-10-31T09:27:13.495Z"
+   "retrievedAt": "2026-10-31T12:31:59.848Z"
   },
   "pickled_cucumber": {
    "key": "pickled_cucumber",
@@ -1319,7 +1766,7 @@
      "grams": 5
     }
    ],
-   "retrievedAt": "2026-10-31T09:27:13.495Z"
+   "retrievedAt": "2026-10-31T12:31:59.848Z"
   },
   "nori": {
    "key": "nori",
@@ -1344,7 +1791,7 @@
      "grams": 3
     }
    ],
-   "retrievedAt": "2026-10-31T09:27:13.495Z"
+   "retrievedAt": "2026-10-31T12:31:59.848Z"
   },
   "hummus": {
    "key": "hummus",
@@ -1364,7 +1811,7 @@
     "sodiumMg": 120
    },
    "portions": [],
-   "retrievedAt": "2026-10-31T09:27:13.495Z"
+   "retrievedAt": "2026-10-31T12:31:59.848Z"
   },
   "spinach": {
    "key": "spinach",
@@ -1397,7 +1844,7 @@
      "grams": 250
     }
    ],
-   "retrievedAt": "2026-10-31T09:27:13.495Z"
+   "retrievedAt": "2026-10-31T12:31:59.848Z"
   },
   "coconut_milk": {
    "key": "coconut_milk",
@@ -1430,7 +1877,7 @@
      "grams": 165
     }
    ],
-   "retrievedAt": "2026-10-31T09:27:13.495Z"
+   "retrievedAt": "2026-10-31T12:31:59.848Z"
   },
   "banana": {
    "key": "banana",
@@ -1455,7 +1902,7 @@
      "grams": 120
     }
    ],
-   "retrievedAt": "2026-10-31T09:27:13.495Z"
+   "retrievedAt": "2026-10-31T12:31:59.848Z"
   },
   "mozzarella": {
    "key": "mozzarella",
@@ -1475,7 +1922,7 @@
     "sodiumMg": 198
    },
    "portions": [],
-   "retrievedAt": "2026-10-31T09:27:13.495Z"
+   "retrievedAt": "2026-10-31T12:31:59.848Z"
   },
   "feta": {
    "key": "feta",
@@ -1504,7 +1951,7 @@
      "grams": 200
     }
    ],
-   "retrievedAt": "2026-10-31T09:27:13.495Z"
+   "retrievedAt": "2026-10-31T12:31:59.848Z"
   },
   "cheddar": {
    "key": "cheddar",
@@ -1537,7 +1984,7 @@
      "grams": 20
     }
    ],
-   "retrievedAt": "2026-10-31T09:27:13.495Z"
+   "retrievedAt": "2026-10-31T12:31:59.848Z"
   },
   "parmesan": {
    "key": "parmesan",
@@ -1566,7 +2013,7 @@
      "grams": 40
     }
    ],
-   "retrievedAt": "2026-10-31T09:27:13.495Z"
+   "retrievedAt": "2026-10-31T12:31:59.848Z"
   },
   "cream_cheese": {
    "key": "cream_cheese",
@@ -1591,7 +2038,7 @@
      "grams": 15
     }
    ],
-   "retrievedAt": "2026-10-31T09:27:13.495Z"
+   "retrievedAt": "2026-10-31T12:31:59.848Z"
   },
   "greek_yogurt_10": {
    "key": "greek_yogurt_10",
@@ -1616,7 +2063,7 @@
      "grams": 100
     }
    ],
-   "retrievedAt": "2026-10-31T09:27:13.495Z"
+   "retrievedAt": "2026-10-31T12:31:59.848Z"
   },
   "milk_whole": {
    "key": "milk_whole",
@@ -1653,7 +2100,7 @@
      "grams": 320
     }
    ],
-   "retrievedAt": "2026-10-31T09:27:13.495Z"
+   "retrievedAt": "2026-10-31T12:31:59.848Z"
   },
   "milk_semi": {
    "key": "milk_semi",
@@ -1690,7 +2137,7 @@
      "grams": 320
     }
    ],
-   "retrievedAt": "2026-10-31T09:27:13.495Z"
+   "retrievedAt": "2026-10-31T12:31:59.848Z"
   },
   "milk_skimmed": {
    "key": "milk_skimmed",
@@ -1727,7 +2174,7 @@
      "grams": 320
     }
    ],
-   "retrievedAt": "2026-10-31T09:27:13.495Z"
+   "retrievedAt": "2026-10-31T12:31:59.848Z"
   },
   "oat_drink": {
    "key": "oat_drink",
@@ -1764,7 +2211,7 @@
      "grams": 320
     }
    ],
-   "retrievedAt": "2026-10-31T09:27:13.495Z"
+   "retrievedAt": "2026-10-31T12:31:59.848Z"
   },
   "mayonnaise": {
    "key": "mayonnaise",
@@ -1793,7 +2240,7 @@
      "grams": 95
     }
    ],
-   "retrievedAt": "2026-10-31T09:27:13.495Z"
+   "retrievedAt": "2026-10-31T12:31:59.848Z"
   },
   "garlic_dressing": {
    "key": "garlic_dressing",
@@ -1826,7 +2273,7 @@
      "grams": 100
     }
    ],
-   "retrievedAt": "2026-10-31T09:27:13.495Z"
+   "retrievedAt": "2026-10-31T12:31:59.848Z"
   },
   "tzatziki": {
    "key": "tzatziki",
@@ -1846,7 +2293,7 @@
     "sodiumMg": 206
    },
    "portions": [],
-   "retrievedAt": "2026-10-31T09:27:13.495Z"
+   "retrievedAt": "2026-10-31T12:31:59.848Z"
   },
   "sweet_chili_sauce": {
    "key": "sweet_chili_sauce",
@@ -1871,7 +2318,7 @@
      "grams": 17
     }
    ],
-   "retrievedAt": "2026-10-31T09:27:13.495Z"
+   "retrievedAt": "2026-10-31T12:31:59.848Z"
   },
   "soy_sauce": {
    "key": "soy_sauce",
@@ -1900,7 +2347,7 @@
      "grams": 13
     }
    ],
-   "retrievedAt": "2026-10-31T09:27:13.495Z"
+   "retrievedAt": "2026-10-31T12:31:59.848Z"
   },
   "teriyaki_sauce": {
    "key": "teriyaki_sauce",
@@ -1920,7 +2367,7 @@
     "sodiumMg": 2488
    },
    "portions": [],
-   "retrievedAt": "2026-10-31T09:27:13.495Z"
+   "retrievedAt": "2026-10-31T12:31:59.848Z"
   },
   "ketchup": {
    "key": "ketchup",
@@ -1949,7 +2396,7 @@
      "grams": 20
     }
    ],
-   "retrievedAt": "2026-10-31T09:27:13.495Z"
+   "retrievedAt": "2026-10-31T12:31:59.848Z"
   },
   "tomato_canned": {
    "key": "tomato_canned",
@@ -1978,7 +2425,7 @@
      "grams": 100
     }
    ],
-   "retrievedAt": "2026-10-31T09:27:13.495Z"
+   "retrievedAt": "2026-10-31T12:31:59.848Z"
   },
   "caesar_dressing": {
    "key": "caesar_dressing",
@@ -2007,7 +2454,7 @@
      "grams": 18
     }
    ],
-   "retrievedAt": "2026-10-31T09:27:13.495Z"
+   "retrievedAt": "2026-10-31T12:31:59.848Z"
   },
   "tahini": {
    "key": "tahini",
@@ -2036,7 +2483,118 @@
      "grams": 15
     }
    ],
-   "retrievedAt": "2026-10-31T09:27:13.495Z"
+   "retrievedAt": "2026-10-31T12:31:59.848Z"
+  },
+  "sour_cream_18": {
+   "key": "sour_cream_18",
+   "label": "Sour cream, 18%",
+   "group": "sauce",
+   "source": "mvt",
+   "sourceId": "01.087",
+   "sourceName": "Cream, sour, low-fat, 18 % fat",
+   "sourceUrl": "https://www.matvaretabellen.no/en/cream-sour-low-fat-18-fat/",
+   "per100g": {
+    "kcal": 189,
+    "protein": 3,
+    "carbs": 3.7,
+    "fat": 18,
+    "fiber": 0,
+    "sugar": 3.7,
+    "sodiumMg": 30
+   },
+   "portions": [
+    {
+     "name": "tablespoon",
+     "grams": 18
+    },
+    {
+     "name": "decilitre",
+     "grams": 100
+    },
+    {
+     "name": "cup",
+     "grams": 300
+    }
+   ],
+   "retrievedAt": "2026-10-31T12:31:59.848Z"
+  },
+  "hollandaise": {
+   "key": "hollandaise",
+   "label": "Hollandaise / béarnaise-type sauce",
+   "group": "sauce",
+   "source": "mvt",
+   "sourceId": "10.162",
+   "sourceName": "Hollandaise sauce, home-made",
+   "sourceUrl": "https://www.matvaretabellen.no/en/hollandaise-sauce-home-made/",
+   "per100g": {
+    "kcal": 525,
+    "protein": 3.3,
+    "carbs": 0.8,
+    "fat": 56.4,
+    "fiber": 0.3,
+    "sugar": 0.7,
+    "sodiumMg": 599
+   },
+   "portions": [
+    {
+     "name": "decilitre",
+     "grams": 100
+    },
+    {
+     "name": "tablespoon",
+     "grams": 11
+    }
+   ],
+   "retrievedAt": "2026-10-31T12:31:59.848Z"
+  },
+  "pesto": {
+   "key": "pesto",
+   "label": "Pesto, green",
+   "group": "sauce",
+   "source": "mvt",
+   "sourceId": "06.143",
+   "sourceName": "Pesto, green, home-made",
+   "sourceUrl": "https://www.matvaretabellen.no/en/pesto-green-home-made/",
+   "per100g": {
+    "kcal": 620,
+    "protein": 10.6,
+    "carbs": 4,
+    "fat": 61.9,
+    "fiber": 2,
+    "sugar": 1.7,
+    "sodiumMg": 408
+   },
+   "portions": [
+    {
+     "name": "tablespoon",
+     "grams": 18
+    },
+    {
+     "name": "decilitre",
+     "grams": 100
+    }
+   ],
+   "retrievedAt": "2026-10-31T12:31:59.848Z"
+  },
+  "miso": {
+   "key": "miso",
+   "label": "Miso",
+   "group": "sauce",
+   "source": "mvt",
+   "sourceId": "10.138",
+   "sourceName": "Miso",
+   "sourceUrl": "https://www.matvaretabellen.no/en/miso/",
+   "per100g": {
+    "kcal": 182,
+    "protein": 17.2,
+    "carbs": 1.5,
+    "fat": 10.5,
+    "fiber": 7,
+    "sugar": 1.2,
+    "sodiumMg": 4300
+   },
+   "portions": [],
+   "retrievedAt": "2026-10-31T12:31:59.848Z"
   },
   "oil_rapeseed": {
    "key": "oil_rapeseed",
@@ -2065,7 +2623,7 @@
      "grams": 90
     }
    ],
-   "retrievedAt": "2026-10-31T09:27:13.495Z"
+   "retrievedAt": "2026-10-31T12:31:59.848Z"
   },
   "oil_olive": {
    "key": "oil_olive",
@@ -2094,7 +2652,7 @@
      "grams": 90
     }
    ],
-   "retrievedAt": "2026-10-31T09:27:13.495Z"
+   "retrievedAt": "2026-10-31T12:31:59.848Z"
   },
   "oil_sesame": {
    "key": "oil_sesame",
@@ -2123,7 +2681,7 @@
      "grams": 90
     }
    ],
-   "retrievedAt": "2026-10-31T09:27:13.495Z"
+   "retrievedAt": "2026-10-31T12:31:59.848Z"
   },
   "butter": {
    "key": "butter",
@@ -2152,7 +2710,7 @@
      "grams": 90
     }
    ],
-   "retrievedAt": "2026-10-31T09:27:13.495Z"
+   "retrievedAt": "2026-10-31T12:31:59.848Z"
   },
   "peanuts_roasted": {
    "key": "peanuts_roasted",
@@ -2181,7 +2739,7 @@
      "grams": 1
     }
    ],
-   "retrievedAt": "2026-10-31T09:27:13.495Z"
+   "retrievedAt": "2026-10-31T12:31:59.848Z"
   },
   "cashews": {
    "key": "cashews",
@@ -2214,7 +2772,7 @@
      "grams": 1
     }
    ],
-   "retrievedAt": "2026-10-31T09:27:13.495Z"
+   "retrievedAt": "2026-10-31T12:31:59.848Z"
   },
   "cream_18": {
    "key": "cream_18",
@@ -2247,7 +2805,7 @@
      "grams": 11
     }
    ],
-   "retrievedAt": "2026-10-31T09:27:13.495Z"
+   "retrievedAt": "2026-10-31T12:31:59.848Z"
   },
   "sesame_seeds": {
    "key": "sesame_seeds",
@@ -2276,7 +2834,7 @@
      "grams": 9
     }
    ],
-   "retrievedAt": "2026-10-31T09:27:13.495Z"
+   "retrievedAt": "2026-10-31T12:31:59.848Z"
   },
   "tea_black": {
    "key": "tea_black",
@@ -2305,7 +2863,7 @@
      "grams": 240
     }
    ],
-   "retrievedAt": "2026-10-31T09:27:13.495Z"
+   "retrievedAt": "2026-10-31T12:31:59.848Z"
   },
   "tea_green": {
    "key": "tea_green",
@@ -2334,7 +2892,7 @@
      "grams": 240
     }
    ],
-   "retrievedAt": "2026-10-31T09:27:13.495Z"
+   "retrievedAt": "2026-10-31T12:31:59.848Z"
   },
   "coffee": {
    "key": "coffee",
@@ -2363,7 +2921,7 @@
      "grams": 100
     }
    ],
-   "retrievedAt": "2026-10-31T09:27:13.495Z"
+   "retrievedAt": "2026-10-31T12:31:59.848Z"
   },
   "cola": {
    "key": "cola",
@@ -2404,7 +2962,172 @@
      "grams": 330
     }
    ],
-   "retrievedAt": "2026-10-31T09:27:13.495Z"
+   "retrievedAt": "2026-10-31T12:31:59.848Z"
+  },
+  "apple_juice": {
+   "key": "apple_juice",
+   "label": "Apple juice",
+   "group": "drink",
+   "source": "mvt",
+   "sourceId": "06.571",
+   "sourceName": "Apple juice",
+   "sourceUrl": "https://www.matvaretabellen.no/en/apple-juice/",
+   "per100g": {
+    "kcal": 42,
+    "protein": 0,
+    "carbs": 10.2,
+    "fat": 0.1,
+    "fiber": 0.3,
+    "sugar": 10.2,
+    "sodiumMg": 3
+   },
+   "portions": [
+    {
+     "name": "glass (small)",
+     "grams": 150
+    },
+    {
+     "name": "decilitre",
+     "grams": 100
+    },
+    {
+     "name": "glass",
+     "grams": 200
+    },
+    {
+     "name": "glass (large)",
+     "grams": 320
+    }
+   ],
+   "retrievedAt": "2026-10-31T12:31:59.848Z"
+  },
+  "orange_juice": {
+   "key": "orange_juice",
+   "label": "Orange juice",
+   "group": "drink",
+   "source": "mvt",
+   "sourceId": "06.682",
+   "sourceName": "Orange juice, freshly squeezed",
+   "sourceUrl": "https://www.matvaretabellen.no/en/orange-juice-freshly-squeezed/",
+   "per100g": {
+    "kcal": 37,
+    "protein": 0.6,
+    "carbs": 8.1,
+    "fat": 0.2,
+    "fiber": 0,
+    "sugar": 8.1,
+    "sodiumMg": 2
+   },
+   "portions": [
+    {
+     "name": "glass (small)",
+     "grams": 150
+    },
+    {
+     "name": "decilitre",
+     "grams": 100
+    },
+    {
+     "name": "glass",
+     "grams": 200
+    },
+    {
+     "name": "glass (large)",
+     "grams": 320
+    }
+   ],
+   "retrievedAt": "2026-10-31T12:31:59.848Z"
+  },
+  "beer_pilsner": {
+   "key": "beer_pilsner",
+   "label": "Beer, pilsner 4.7%",
+   "group": "drink",
+   "source": "mvt",
+   "sourceId": "13.024",
+   "sourceName": "Beer, 4,7 vol-% alcohol, Pilsner",
+   "sourceUrl": "https://www.matvaretabellen.no/en/beer-4-7-vol-alcohol-pilsner/",
+   "per100g": {
+    "kcal": 41,
+    "protein": 0.4,
+    "carbs": 3.2,
+    "fat": 0,
+    "fiber": 0,
+    "sugar": 0.4,
+    "sodiumMg": 6
+   },
+   "portions": [
+    {
+     "name": "decilitre",
+     "grams": 100
+    },
+    {
+     "name": "glass",
+     "grams": 500
+    },
+    {
+     "name": "box (small)",
+     "grams": 330
+    }
+   ],
+   "retrievedAt": "2026-10-31T12:31:59.848Z"
+  },
+  "wine_red": {
+   "key": "wine_red",
+   "label": "Red wine",
+   "group": "drink",
+   "source": "mvt",
+   "sourceId": "13.060",
+   "sourceName": "Wine, red, unspecified",
+   "sourceUrl": "https://www.matvaretabellen.no/en/wine-red-unspecified/",
+   "per100g": {
+    "kcal": 70,
+    "protein": 0.1,
+    "carbs": 0.5,
+    "fat": 0,
+    "fiber": 0,
+    "sugar": 0.5,
+    "sodiumMg": 7
+   },
+   "portions": [
+    {
+     "name": "decilitre",
+     "grams": 100
+    },
+    {
+     "name": "glass",
+     "grams": 120
+    }
+   ],
+   "retrievedAt": "2026-10-31T12:31:59.848Z"
+  },
+  "wine_white": {
+   "key": "wine_white",
+   "label": "White wine, dry",
+   "group": "drink",
+   "source": "mvt",
+   "sourceId": "13.032",
+   "sourceName": "Wine, white, dry, 12 vol-% alcohol",
+   "sourceUrl": "https://www.matvaretabellen.no/en/wine-white-dry-12-vol-alcohol/",
+   "per100g": {
+    "kcal": 69,
+    "protein": 0.1,
+    "carbs": 0.6,
+    "fat": 0,
+    "fiber": 0,
+    "sugar": 0.6,
+    "sodiumMg": 4
+   },
+   "portions": [
+    {
+     "name": "glass",
+     "grams": 100
+    },
+    {
+     "name": "decilitre",
+     "grams": 100
+    }
+   ],
+   "retrievedAt": "2026-10-31T12:31:59.848Z"
   },
   "sugar_white": {
    "key": "sugar_white",
@@ -2441,7 +3164,7 @@
      "grams": 90
     }
    ],
-   "retrievedAt": "2026-10-31T09:27:13.495Z"
+   "retrievedAt": "2026-10-31T12:31:59.848Z"
   },
   "sugar_brown": {
    "key": "sugar_brown",
@@ -2470,7 +3193,7 @@
      "grams": 70
     }
    ],
-   "retrievedAt": "2026-10-31T09:27:13.495Z"
+   "retrievedAt": "2026-10-31T12:31:59.848Z"
   },
   "honey": {
    "key": "honey",
@@ -2507,7 +3230,7 @@
      "grams": 15
     }
    ],
-   "retrievedAt": "2026-10-31T09:27:13.495Z"
+   "retrievedAt": "2026-10-31T12:31:59.848Z"
   },
   "ref_kebab_pita": {
    "key": "ref_kebab_pita",
@@ -2527,7 +3250,7 @@
     "sodiumMg": 388
    },
    "portions": [],
-   "retrievedAt": "2026-10-31T09:27:13.495Z"
+   "retrievedAt": "2026-10-31T12:31:59.848Z"
   },
   "ref_kebab_durum": {
    "key": "ref_kebab_durum",
@@ -2547,7 +3270,7 @@
     "sodiumMg": 503
    },
    "portions": [],
-   "retrievedAt": "2026-10-31T09:27:13.495Z"
+   "retrievedAt": "2026-10-31T12:31:59.848Z"
   },
   "ref_falafel_pita": {
    "key": "ref_falafel_pita",
@@ -2567,7 +3290,7 @@
     "sodiumMg": 390
    },
    "portions": [],
-   "retrievedAt": "2026-10-31T09:27:13.495Z"
+   "retrievedAt": "2026-10-31T12:31:59.848Z"
   },
   "ref_nigiri_salmon": {
    "key": "ref_nigiri_salmon",
@@ -2592,7 +3315,7 @@
      "grams": 30
     }
    ],
-   "retrievedAt": "2026-10-31T09:27:13.495Z"
+   "retrievedAt": "2026-10-31T12:31:59.848Z"
   },
   "ref_nigiri_tuna": {
    "key": "ref_nigiri_tuna",
@@ -2617,7 +3340,7 @@
      "grams": 30
     }
    ],
-   "retrievedAt": "2026-10-31T09:27:13.495Z"
+   "retrievedAt": "2026-10-31T12:31:59.848Z"
   },
   "ref_maki_salmon": {
    "key": "ref_maki_salmon",
@@ -2642,7 +3365,7 @@
      "grams": 25
     }
    ],
-   "retrievedAt": "2026-10-31T09:27:13.495Z"
+   "retrievedAt": "2026-10-31T12:31:59.848Z"
   },
   "ref_maki_california": {
    "key": "ref_maki_california",
@@ -2667,7 +3390,7 @@
      "grams": 25
     }
    ],
-   "retrievedAt": "2026-10-31T09:27:13.495Z"
+   "retrievedAt": "2026-10-31T12:31:59.848Z"
   },
   "ref_maki_avocado": {
    "key": "ref_maki_avocado",
@@ -2692,7 +3415,7 @@
      "grams": 25
     }
    ],
-   "retrievedAt": "2026-10-31T09:27:13.495Z"
+   "retrievedAt": "2026-10-31T12:31:59.848Z"
   },
   "ref_burger_single": {
    "key": "ref_burger_single",
@@ -2717,7 +3440,7 @@
      "grams": 100
     }
    ],
-   "retrievedAt": "2026-10-31T09:27:13.495Z"
+   "retrievedAt": "2026-10-31T12:31:59.848Z"
   },
   "ref_cheeseburger": {
    "key": "ref_cheeseburger",
@@ -2742,7 +3465,7 @@
      "grams": 105
     }
    ],
-   "retrievedAt": "2026-10-31T09:27:13.495Z"
+   "retrievedAt": "2026-10-31T12:31:59.848Z"
   },
   "ref_chicken_burger": {
    "key": "ref_chicken_burger",
@@ -2767,7 +3490,7 @@
      "grams": 140
     }
    ],
-   "retrievedAt": "2026-10-31T09:27:13.495Z"
+   "retrievedAt": "2026-10-31T12:31:59.848Z"
   },
   "ref_pizza_margherita": {
    "key": "ref_pizza_margherita",
@@ -2792,7 +3515,7 @@
      "grams": 300
     }
    ],
-   "retrievedAt": "2026-10-31T09:27:13.495Z"
+   "retrievedAt": "2026-10-31T12:31:59.848Z"
   },
   "ref_pizza_pepperoni": {
    "key": "ref_pizza_pepperoni",
@@ -2817,7 +3540,7 @@
      "grams": 300
     }
    ],
-   "retrievedAt": "2026-10-31T09:27:13.495Z"
+   "retrievedAt": "2026-10-31T12:31:59.848Z"
   },
   "ref_caffe_latte_whole": {
    "key": "ref_caffe_latte_whole",
@@ -2846,7 +3569,7 @@
      "grams": 300
     }
    ],
-   "retrievedAt": "2026-10-31T09:27:13.495Z"
+   "retrievedAt": "2026-10-31T12:31:59.848Z"
   },
   "ref_caffe_latte_oat": {
    "key": "ref_caffe_latte_oat",
@@ -2875,7 +3598,7 @@
      "grams": 300
     }
    ],
-   "retrievedAt": "2026-10-31T09:27:13.495Z"
+   "retrievedAt": "2026-10-31T12:31:59.848Z"
   },
   "ref_pad_thai": {
    "key": "ref_pad_thai",
@@ -2895,7 +3618,7 @@
     "sodiumMg": 450
    },
    "portions": [],
-   "retrievedAt": "2026-10-31T09:27:13.495Z"
+   "retrievedAt": "2026-10-31T12:31:59.848Z"
   },
   "ref_greek_salad": {
    "key": "ref_greek_salad",
@@ -2920,7 +3643,7 @@
      "grams": 135
     }
    ],
-   "retrievedAt": "2026-10-31T09:27:13.495Z"
+   "retrievedAt": "2026-10-31T12:31:59.848Z"
   },
   "ref_chicken_feta_salad": {
    "key": "ref_chicken_feta_salad",
@@ -2940,7 +3663,371 @@
     "sodiumMg": 384
    },
    "portions": [],
-   "retrievedAt": "2026-10-31T09:27:13.495Z"
+   "retrievedAt": "2026-10-31T12:31:59.848Z"
+  },
+  "ref_maki_tempura": {
+   "key": "ref_maki_tempura",
+   "label": "Sushi, maki, tempura",
+   "group": "dish_reference",
+   "source": "mvt",
+   "sourceId": "04.369",
+   "sourceName": "Sushi, maki, tempura",
+   "sourceUrl": "https://www.matvaretabellen.no/en/sushi-maki-tempura/",
+   "per100g": {
+    "kcal": 128,
+    "protein": 4.4,
+    "carbs": 19.9,
+    "fat": 3.3,
+    "fiber": 0.6,
+    "sugar": 0.4,
+    "sodiumMg": 111
+   },
+   "portions": [
+    {
+     "name": "pcs",
+     "grams": 25
+    }
+   ],
+   "retrievedAt": "2026-10-31T12:31:59.848Z"
+  },
+  "ref_pasta_bolognese": {
+   "key": "ref_pasta_bolognese",
+   "label": "Pasta bolognese",
+   "group": "dish_reference",
+   "source": "mvt",
+   "sourceId": "03.463",
+   "sourceName": "Pasta bolognese",
+   "sourceUrl": "https://www.matvaretabellen.no/en/pasta-bolognese/",
+   "per100g": {
+    "kcal": 109,
+    "protein": 5.9,
+    "carbs": 12.4,
+    "fat": 3.7,
+    "fiber": 1,
+    "sugar": 1.6,
+    "sodiumMg": 304
+   },
+   "portions": [
+    {
+     "name": "portion",
+     "grams": 300
+    }
+   ],
+   "retrievedAt": "2026-10-31T12:31:59.848Z"
+  },
+  "ref_pasta_carbonara": {
+   "key": "ref_pasta_carbonara",
+   "label": "Pasta carbonara",
+   "group": "dish_reference",
+   "source": "mvt",
+   "sourceId": "10.226",
+   "sourceName": "Pasta carbonara",
+   "sourceUrl": "https://www.matvaretabellen.no/en/pasta-carbonara/",
+   "per100g": {
+    "kcal": 181,
+    "protein": 8.5,
+    "carbs": 17.1,
+    "fat": 8.5,
+    "fiber": 1,
+    "sugar": 0.2,
+    "sodiumMg": 366
+   },
+   "portions": [
+    {
+     "name": "portion",
+     "grams": 300
+    }
+   ],
+   "retrievedAt": "2026-10-31T12:31:59.848Z"
+  },
+  "ref_pasta_arrabbiata": {
+   "key": "ref_pasta_arrabbiata",
+   "label": "Pasta arrabbiata",
+   "group": "dish_reference",
+   "source": "mvt",
+   "sourceId": "10.227",
+   "sourceName": "Pasta arrabiata",
+   "sourceUrl": "https://www.matvaretabellen.no/en/pasta-arrabiata/",
+   "per100g": {
+    "kcal": 127,
+    "protein": 4.3,
+    "carbs": 18,
+    "fat": 3.9,
+    "fiber": 2,
+    "sugar": 1.4,
+    "sodiumMg": 251
+   },
+   "portions": [
+    {
+     "name": "portion",
+     "grams": 300
+    }
+   ],
+   "retrievedAt": "2026-10-31T12:31:59.848Z"
+  },
+  "ref_butter_chicken": {
+   "key": "ref_butter_chicken",
+   "label": "Butter chicken",
+   "group": "dish_reference",
+   "source": "mvt",
+   "sourceId": "03.511",
+   "sourceName": "Butter chicken, industrially made",
+   "sourceUrl": "https://www.matvaretabellen.no/en/butter-chicken-industrially-made/",
+   "per100g": {
+    "kcal": 187,
+    "protein": 11.3,
+    "carbs": 5.2,
+    "fat": 13.2,
+    "fiber": 0.9,
+    "sugar": 4.9,
+    "sodiumMg": 470
+   },
+   "portions": [],
+   "retrievedAt": "2026-10-31T12:31:59.848Z"
+  },
+  "ref_fish_soup": {
+   "key": "ref_fish_soup",
+   "label": "Fish soup, home-made",
+   "group": "dish_reference",
+   "source": "mvt",
+   "sourceId": "10.195",
+   "sourceName": "Fish soup, home-made",
+   "sourceUrl": "https://www.matvaretabellen.no/en/fish-soup-home-made/",
+   "per100g": {
+    "kcal": 89,
+    "protein": 4.3,
+    "carbs": 1.9,
+    "fat": 7,
+    "fiber": 0.7,
+    "sugar": 1.5,
+    "sodiumMg": 386
+   },
+   "portions": [
+    {
+     "name": "portion",
+     "grams": 350
+    },
+    {
+     "name": "decilitre",
+     "grams": 100
+    }
+   ],
+   "retrievedAt": "2026-10-31T12:31:59.848Z"
+  },
+  "ref_mushroom_soup": {
+   "key": "ref_mushroom_soup",
+   "label": "Mushroom soup",
+   "group": "dish_reference",
+   "source": "mvt",
+   "sourceId": "10.208",
+   "sourceName": "Mushroom soup",
+   "sourceUrl": "https://www.matvaretabellen.no/en/mushroom-soup/",
+   "per100g": {
+    "kcal": 67,
+    "protein": 1.3,
+    "carbs": 1.6,
+    "fat": 5.9,
+    "fiber": 1,
+    "sugar": 1.1,
+    "sodiumMg": 414
+   },
+   "portions": [
+    {
+     "name": "portion",
+     "grams": 350
+    },
+    {
+     "name": "decilitre",
+     "grams": 100
+    }
+   ],
+   "retrievedAt": "2026-10-31T12:31:59.848Z"
+  },
+  "ref_lentil_soup": {
+   "key": "ref_lentil_soup",
+   "label": "Lentil soup",
+   "group": "dish_reference",
+   "source": "mvt",
+   "sourceId": "10.228",
+   "sourceName": "Lentil soup",
+   "sourceUrl": "https://www.matvaretabellen.no/en/lentil-soup/",
+   "per100g": {
+    "kcal": 45,
+    "protein": 2.9,
+    "carbs": 4.9,
+    "fat": 1,
+    "fiber": 3,
+    "sugar": 1.7,
+    "sodiumMg": 278
+   },
+   "portions": [
+    {
+     "name": "portion",
+     "grams": 350
+    },
+    {
+     "name": "decilitre",
+     "grams": 100
+    }
+   ],
+   "retrievedAt": "2026-10-31T12:31:59.848Z"
+  },
+  "ref_onion_soup": {
+   "key": "ref_onion_soup",
+   "label": "Onion soup, home-made",
+   "group": "dish_reference",
+   "source": "mvt",
+   "sourceId": "10.164",
+   "sourceName": "Onion soup, home-made",
+   "sourceUrl": "https://www.matvaretabellen.no/en/onion-soup-home-made/",
+   "per100g": {
+    "kcal": 28,
+    "protein": 0.7,
+    "carbs": 2.6,
+    "fat": 1.3,
+    "fiber": 2,
+    "sugar": 2.4,
+    "sodiumMg": 271
+   },
+   "portions": [
+    {
+     "name": "portion",
+     "grams": 350
+    },
+    {
+     "name": "decilitre",
+     "grams": 100
+    }
+   ],
+   "retrievedAt": "2026-10-31T12:31:59.848Z"
+  },
+  "ref_vegetable_soup": {
+   "key": "ref_vegetable_soup",
+   "label": "Carrot soup, home-made (vegetable soup)",
+   "group": "dish_reference",
+   "source": "mvt",
+   "sourceId": "10.161",
+   "sourceName": "Carrot soup, home-made",
+   "sourceUrl": "https://www.matvaretabellen.no/en/carrot-soup-home-made/",
+   "per100g": {
+    "kcal": 46,
+    "protein": 0.6,
+    "carbs": 3.1,
+    "fat": 3.3,
+    "fiber": 0.7,
+    "sugar": 3,
+    "sodiumMg": 360
+   },
+   "portions": [
+    {
+     "name": "portion",
+     "grams": 350
+    },
+    {
+     "name": "decilitre",
+     "grams": 100
+    }
+   ],
+   "retrievedAt": "2026-10-31T12:31:59.848Z"
+  },
+  "ref_spring_roll_fried": {
+   "key": "ref_spring_roll_fried",
+   "label": "Spring roll, vegetables, fried",
+   "group": "dish_reference",
+   "source": "mvt",
+   "sourceId": "10.223",
+   "sourceName": "Spring roll, vegetables, fried, industrially made",
+   "sourceUrl": "https://www.matvaretabellen.no/en/spring-roll-vegetables-fried-industrially-made/",
+   "per100g": {
+    "kcal": 230,
+    "protein": 4.5,
+    "carbs": 22.1,
+    "fat": 13.1,
+    "fiber": 3,
+    "sugar": 2.7,
+    "sodiumMg": 485
+   },
+   "portions": [],
+   "retrievedAt": "2026-10-31T12:31:59.848Z"
+  },
+  "ref_chicken_nuggets": {
+   "key": "ref_chicken_nuggets",
+   "label": "Chicken nuggets, fast-food",
+   "group": "dish_reference",
+   "source": "mvt",
+   "sourceId": "03.307",
+   "sourceName": "Chicken nuggets, deep fried, fast food restaurant",
+   "sourceUrl": "https://www.matvaretabellen.no/en/chicken-nuggets-deep-fried-fast-food-restaurant/",
+   "per100g": {
+    "kcal": 261,
+    "protein": 16,
+    "carbs": 22.1,
+    "fat": 11.6,
+    "fiber": 2,
+    "sugar": 0.4,
+    "sodiumMg": 482
+   },
+   "portions": [
+    {
+     "name": "pcs",
+     "grams": 16
+    }
+   ],
+   "retrievedAt": "2026-10-31T12:31:59.848Z"
+  },
+  "ref_ice_cream": {
+   "key": "ref_ice_cream",
+   "label": "Ice cream, dairy, vanilla",
+   "group": "dish_reference",
+   "source": "mvt",
+   "sourceId": "01.018",
+   "sourceName": "Ice cream, dairy, vanilla",
+   "sourceUrl": "https://www.matvaretabellen.no/en/ice-cream-dairy-vanilla/",
+   "per100g": {
+    "kcal": 178,
+    "protein": 3.8,
+    "carbs": 20,
+    "fat": 9.2,
+    "fiber": 0,
+    "sugar": 19.7,
+    "sodiumMg": 52
+   },
+   "portions": [
+    {
+     "name": "decilitre",
+     "grams": 60
+    },
+    {
+     "name": "portion",
+     "grams": 95
+    }
+   ],
+   "retrievedAt": "2026-10-31T12:31:59.848Z"
+  },
+  "ref_chocolate_cake": {
+   "key": "ref_chocolate_cake",
+   "label": "Chocolate cake with icing",
+   "group": "dish_reference",
+   "source": "mvt",
+   "sourceId": "05.108",
+   "sourceName": "Cake, chocolate, with icing",
+   "sourceUrl": "https://www.matvaretabellen.no/en/cake-chocolate-with-icing/",
+   "per100g": {
+    "kcal": 347,
+    "protein": 4.3,
+    "carbs": 59.5,
+    "fat": 9.9,
+    "fiber": 1,
+    "sugar": 46.2,
+    "sodiumMg": 109
+   },
+   "portions": [
+    {
+     "name": "portion",
+     "grams": 80
+    }
+   ],
+   "retrievedAt": "2026-10-31T12:31:59.848Z"
   }
  }
 }
