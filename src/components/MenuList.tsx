@@ -1,13 +1,13 @@
 "use client";
 import { useState } from "react";
-import { useRouter } from "next/navigation";
 import { Loader2, Plus } from "lucide-react";
 import { track } from "@/lib/client/loading";
+import { backend } from "@/lib/client/backend";
 import type { MealView } from "@/server/repo/menu";
 import { MealRow } from "./MealRow";
 import { MealSheet } from "./MealSheet";
 
-export function MenuList({ meals, favoriteIds, restaurantId, aiEnabled }: { meals: MealView[]; favoriteIds: string[]; restaurantId: string; aiEnabled: boolean }) {
+export function MenuList({ meals, favoriteIds, restaurantId, aiEnabled, onChanged }: { meals: MealView[]; favoriteIds: string[]; restaurantId: string; aiEnabled: boolean; onChanged: () => void }) {
   const [open, setOpen] = useState<MealView | null>(null);
   const groups = meals.reduce<Record<string, MealView[]>>((acc, m) => {
     (acc[m.category ?? "Menu"] ??= []).push(m);
@@ -25,14 +25,13 @@ export function MenuList({ meals, favoriteIds, restaurantId, aiEnabled }: { meal
           </ul>
         </section>
       ))}
-      <AddDish restaurantId={restaurantId} aiEnabled={aiEnabled} hasMenu={meals.length > 0} />
-      {open && <MealSheet meal={open} onClose={() => setOpen(null)} isFavorite={favoriteIds.includes(open.id)} />}
+      <AddDish restaurantId={restaurantId} aiEnabled={aiEnabled} hasMenu={meals.length > 0} onAdded={onChanged} />
+      {open && <MealSheet meal={open} onClose={() => { setOpen(null); onChanged(); }} isFavorite={favoriteIds.includes(open.id)} />}
     </>
   );
 }
 
-function AddDish({ restaurantId, aiEnabled, hasMenu }: { restaurantId: string; aiEnabled: boolean; hasMenu: boolean }) {
-  const router = useRouter();
+function AddDish({ restaurantId, aiEnabled, hasMenu, onAdded }: { restaurantId: string; aiEnabled: boolean; hasMenu: boolean; onAdded: () => void }) {
   const [expanded, setExpanded] = useState(!hasMenu);
   const [name, setName] = useState("");
   const [desc, setDesc] = useState("");
@@ -45,18 +44,12 @@ function AddDish({ restaurantId, aiEnabled, hasMenu }: { restaurantId: string; a
     setBusy(true);
     setError(null);
     try {
-      const res = await track(fetch(`/api/restaurants/${encodeURIComponent(restaurantId)}/items`, {
-        method: "POST",
-        headers: { "content-type": "application/json" },
-        body: JSON.stringify({ name, description: desc || undefined, priceNok: price ? Number(price) : null }),
-      }));
-      const j = await res.json();
-      if (!res.ok) throw new Error(j.error);
+      await track(backend.addDish(restaurantId, { name, description: desc || undefined, priceNok: price ? Number(price) : null }));
       setName("");
       setDesc("");
       setPrice("");
       setExpanded(false);
-      router.refresh();
+      onAdded();
     } catch (err) {
       setError((err as Error).message || "Couldn't add the dish.");
     } finally {

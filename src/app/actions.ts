@@ -3,11 +3,14 @@ import { revalidatePath } from "next/cache";
 import { headers } from "next/headers";
 import { z } from "zod";
 import { resolveBasis } from "@/lib/nutrition/basis";
-import { presetTargets, type GoalType } from "@/lib/scoring";
-import { todayISO } from "@/lib/format";
+import { shiftDay, todayISO } from "@/lib/format";
+import type { DiaryData, ProfileData, RestaurantPageData, SavedData } from "@/lib/client/backendTypes";
+import { FOOD_ATTRIBUTION, FOODS_RETRIEVED_AT } from "@/lib/nutrition/estimate";
+import { getLlmProvider } from "@/server/nutrition/llm/providers";
+import { placesProvider } from "@/server/places";
 import { getSession, supabaseConfigured, supabaseServer } from "@/server/auth";
 import { getItemBasis } from "@/server/nutrition/service";
-import { getMenuItem, getRestaurant } from "@/server/repo/menu";
+import { getMenuItem, getRestaurant, mealViews } from "@/server/repo/menu";
 import * as repo from "@/server/repo/user";
 
 const selectionsSchema = z.record(z.string(), z.union([z.string(), z.array(z.string()), z.number()])).default({});
@@ -110,10 +113,6 @@ export async function saveGoals(input: unknown) {
   return { ok: true };
 }
 
-export async function suggestTargets(goalType: GoalType, maintenanceKcal: number, weightKg: number | null) {
-  return presetTargets(goalType, Math.min(6000, Math.max(1200, maintenanceKcal)), weightKg);
-}
-
 export async function setShowDemo(show: boolean) {
   const { userId } = await getSession();
   await repo.saveProfile(userId, { showDemo: show });
@@ -138,4 +137,60 @@ export async function signInWithEmail(email: string) {
 export async function signOut() {
   if (supabaseConfigured()) await (await supabaseServer()).auth.signOut();
   revalidatePath("/", "layout");
+}
+
+// ── Reads used by client pages ────────────────────────────────────────────
+
+export async function getRestaurantPage(id: string): Promise<RestaurantPageData | null> {
+  const r = await getRestaurant(z.string().min(1).max(200).parse(id));
+  if (!r) return null;
+  const { userId } = await getSession();
+  const [meals, favs, saved] = await Promise.all([mealViews({ restaurantIds: [r.id] }), repo.listFavorites(userId), repo.listSavedRestaurants(userId)]);
+  return {
+    restaurant: { id: r.id, name: r.name, provider: r.provider, providerId: r.providerId, isDemo: r.isDemo, cuisines: r.cuisines, amenity: r.amenity, address: r.address, tags: r.tags },
+    meals,
+    favoriteIds: favs.map((f) => f.menuItemId),
+    saved: saved.some((s) => s.restaurantId === r.id),
+    aiEnabled: Boolean(getLlmProvider()),
+  };
+}
+
+export async function getDiary(requestedDay: string | null): Promise<DiaryData> {
+  const today = todayISO();
+  const day = requestedDay && /^\d{4}-\d{2}-\d{2}$/.test(requestedDay) ? requestedDay : today;
+  const { userId } = await getSession();
+  const [profile, entries, recent, hist] = await Promise.all([repo.getProfile(userId), repo.listDay(userId, day), repo.recentEntries(userId, 8), repo.history(userId, shiftDay(day, -6), day)]);
+  return {
+    day,
+    today,
+    goals: { goalType: profile.goalType, kcalTarget: profile.kcalTarget, proteinG: profile.proteinG, carbsG: profile.carbsG, fatG: profile.fatG },
+    entries: entries.map((e) => ({ id: e.id, name: e.name, restaurantName: e.restaurantName, portion: e.portion, status: e.status, provider: e.provider, kcal: e.kcal, kcalMin: e.kcalMin, kcalMax: e.kcalMax, protein: e.protein, carbs: e.carbs, fat: e.fat, loggedAt: e.loggedAt.toISOString() })),
+    recent: recent.map((e) => ({ id: e.id, name: e.name, restaurantName: e.restaurantName, kcal: e.kcal * e.portion, protein: e.protein * e.portion })),
+    week: Array.from({ length: 7 }, (_, i) => shiftDay(day, i - 6)).map((d) => ({ day: d, kcal: hist.find((h) => h.day === d)?.kcal ?? 0 })),
+  };
+}
+
+export async function getSaved(): Promise<SavedData> {
+  const { userId } = await getSession();
+  const [favs, saved] = await Promise.all([repo.listFavorites(userId), repo.listSavedRestaurants(userId)]);
+  const meals = await mealViews({ itemIds: favs.map((f) => f.menuItemId) });
+  const restaurants = (await Promise.all(saved.map((s) => getRestaurant(s.restaurantId)))).filter((r) => r !== null);
+  return {
+    favorites: favs.flatMap((f) => {
+      const meal = meals.find((m) => m.id === f.menuItemId);
+      return meal ? [{ meal, selections: f.selections }] : [];
+    }),
+    restaurants: restaurants.map((r) => ({ id: r.id, name: r.name, cuisines: r.cuisines, isDemo: r.isDemo, address: r.address })),
+  };
+}
+
+export async function getProfilePage(): Promise<ProfileData> {
+  const session = await getSession();
+  const p = await repo.getProfile(session.userId);
+  const llm = getLlmProvider();
+  return {
+    profile: { goalType: p.goalType, kcalTarget: p.kcalTarget, proteinG: p.proteinG, carbsG: p.carbsG, fatG: p.fatG, weightKg: p.weightKg, showDemo: p.showDemo },
+    account: { kind: session.kind, email: session.email, supabase: supabaseConfigured() },
+    system: { ai: llm ? `${llm.id} · ${llm.model}` : null, places: placesProvider().attribution, foods: Object.values(FOOD_ATTRIBUTION), foodsRetrievedAt: FOODS_RETRIEVED_AT },
+  };
 }

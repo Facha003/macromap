@@ -15,7 +15,8 @@
     "typecheck": "tsc --noEmit",
     "postinstall": "node scripts/copy-map-worker.mjs",
     "prebuild": "node scripts/copy-map-worker.mjs",
-    "predev": "node scripts/copy-map-worker.mjs"
+    "predev": "node scripts/copy-map-worker.mjs",
+    "build:static": "node scripts/copy-map-worker.mjs && STATIC_EXPORT=1 next build"
   },
   "dependencies": {
     "@electric-sql/pglite": "^0.5.13",

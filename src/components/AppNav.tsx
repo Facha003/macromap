@@ -13,7 +13,7 @@ const TABS = [
 
 export function AppNav() {
   const path = usePathname();
-  const active = (href: string) => (href === "/" ? path === "/" || path.startsWith("/r/") : path.startsWith(href));
+  const active = (href: string) => (href === "/" ? path === "/" || path.startsWith("/r") : path.startsWith(href));
   return (
     <>
       {/* Mobile tab bar */}

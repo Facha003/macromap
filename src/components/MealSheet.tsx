@@ -9,7 +9,7 @@ import { food, proteinPer100kcal } from "@/lib/nutrition/estimate";
 import { fmtDate, fmtGrams, fmtKcal, fmtLikely, fmtNok, fmtRange, PROVIDER_LABEL, todayISO } from "@/lib/format";
 import { useCompare } from "@/lib/client/compare";
 import { track } from "@/lib/client/loading";
-import { logMeal, toggleFavoriteAction } from "@/app/actions";
+import { backend } from "@/lib/client/backend";
 import type { MealView } from "@/server/repo/menu";
 import { MacroBar } from "./MacroBar";
 import { DemoBadge, ProvenanceChip } from "./Provenance";
@@ -35,12 +35,12 @@ export function MealSheet({ meal, onClose, initialSelections = {}, isFavorite = 
     const isTemplate = (basis.kind === "archetype" || basis.kind === "components") && basis.provider === "template";
     if (!(isTemplate || basis.kind === "unavailable") || meal.model === "ai-fallback") return;
     setAiState("loading");
-    track(fetch(`/api/items/${meal.id}/estimate?ai=1`))
-      .then((r) => (r.ok ? r.json() : null))
+    track(backend.estimate(meal.id, true))
       .then((j) => {
-        if (j?.basis) setBasis(j.basis);
-        setAiNote(j?.aiNote ?? null);
+        setBasis(j.basis);
+        setAiNote(j.aiNote);
       })
+      .catch(() => {})
       .finally(() => setAiState("done"));
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [meal.id]);
@@ -62,7 +62,7 @@ export function MealSheet({ meal, onClose, initialSelections = {}, isFavorite = 
     start(async () => {
       setError(null);
       try {
-        const r = await track(logMeal({ menuItemId: meal.id, selections: sel, portion, day: todayISO() }));
+        const r = await track(backend.logMeal({ menuItemId: meal.id, selections: sel, portion, day: todayISO() }));
         setLogged(r.kcal);
       } catch {
         setError("Couldn't log this meal. Please try again.");
@@ -191,7 +191,7 @@ export function MealSheet({ meal, onClose, initialSelections = {}, isFavorite = 
                   <span className="tabular w-11 text-center text-sm font-medium">{portion}×</span>
                   <button className="p-2.5" aria-label="Larger portion" onClick={() => setPortion((p) => PORTIONS[Math.min(PORTIONS.length - 1, PORTIONS.indexOf(p) + 1)])}><Plus size={16} /></button>
                 </div>
-                <button aria-label={fav ? "Remove from saved" : "Save meal"} aria-pressed={fav} onClick={() => start(async () => setFav(await toggleFavoriteAction(meal.id, sel)))} className="rounded-xl bg-surface-2 p-2.5">
+                <button aria-label={fav ? "Remove from saved" : "Save meal"} aria-pressed={fav} onClick={() => start(async () => setFav(await backend.toggleFavorite(meal.id, sel)))} className="rounded-xl bg-surface-2 p-2.5">
                   <Heart size={18} className={fav ? "fill-current text-danger" : ""} />
                 </button>
                 <button aria-label="Compare" aria-pressed={compare.has(meal.id)} onClick={() => compare.toggle({ id: meal.id, selections: sel })} className={`rounded-xl p-2.5 ${compare.has(meal.id) ? "bg-ink text-bg" : "bg-surface-2"}`}>

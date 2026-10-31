@@ -6,15 +6,11 @@ import { List, Loader2, Map as MapIcon, MapPin, Search, Sparkles } from "lucide-
 import { formatDistance } from "@/lib/geo";
 import { useLocation } from "@/lib/client/location";
 import { track } from "@/lib/client/loading";
+import { backend } from "@/lib/client/backend";
 import { LocationGate } from "./LocationGate";
 import { cuisineLabel, RestaurantCard, type RestaurantCardData } from "./RestaurantCard";
 
-interface PlacesResponse {
-  restaurants: RestaurantCardData[];
-  attribution: string;
-  liveError: string | null;
-  pending: boolean;
-}
+type PlacesResponse = { restaurants: RestaurantCardData[]; attribution: string; liveError: string | null; pending: boolean };
 
 const MapView = dynamic(() => import("./MapView").then((m) => m.MapView), {
   ssr: false,
@@ -41,9 +37,8 @@ export function ExploreView() {
     const load = async () => {
       setLoading(true);
       try {
-        const r = await track(fetch(`/api/places?lat=${location.lat}&lng=${location.lng}&radius=${radiusM}`, { signal: ctrl.signal }));
-        const j = await r.json();
-        if (!r.ok) throw new Error(j.error);
+        const j = await track(backend.places(location.lat, location.lng, radiusM));
+        if (ctrl.signal.aborted) return;
         setData(j);
         setError(null);
         // A slow live lookup keeps running on the server — check back until it lands.

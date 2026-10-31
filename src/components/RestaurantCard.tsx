@@ -34,7 +34,7 @@ function Coverage({ r }: { r: RestaurantCardData }) {
 
 export function RestaurantCard({ r }: { r: RestaurantCardData }) {
   return (
-    <Link href={`/r/${encodeURIComponent(r.id)}`} className="card group flex items-center gap-3 p-4 transition hover:border-ink-3/40 active:scale-[0.995]">
+    <Link href={`/r/?id=${encodeURIComponent(r.id)}`} className="card group flex items-center gap-3 p-4 transition hover:border-ink-3/40 active:scale-[0.995]">
       <div className={`grid h-11 w-11 shrink-0 place-items-center rounded-2xl text-base font-semibold ${r.menuCount ? "bg-ink text-bg" : "bg-surface-2 text-ink-3"}`} aria-hidden>
         {r.name.slice(0, 1).toUpperCase()}
       </div>

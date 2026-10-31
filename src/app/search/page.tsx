@@ -1,6 +1,17 @@
+"use client";
+import { Suspense } from "react";
+import { useSearchParams } from "next/navigation";
 import { SearchView } from "@/components/SearchView";
 
-export default async function SearchPage({ searchParams }: { searchParams: Promise<{ q?: string }> }) {
-  const { q } = await searchParams;
-  return <SearchView initialQuery={q ?? ""} />;
+function Inner() {
+  const q = useSearchParams().get("q") ?? "";
+  return <SearchView key={q} initialQuery={q} />;
+}
+
+export default function SearchPage() {
+  return (
+    <Suspense fallback={null}>
+      <Inner />
+    </Suspense>
+  );
 }

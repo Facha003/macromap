@@ -6,7 +6,7 @@ import type { OfficialNutrition } from "@/lib/nutrition/types";
 import { getDb } from "../db";
 import { menuItems, nutritionRecords, recipeComponents, restaurants } from "../db/schema";
 import { rateLimit } from "../rateLimit";
-import { buildPrompt, interpretationToBasis } from "./llm/interpret";
+import { buildPrompt, interpretationToBasis } from "@/lib/nutrition/llm";
 import { getLlmProvider } from "./llm/providers";
 
 /** Bump when the estimation pipeline changes in a way that should invalidate cached estimates. */

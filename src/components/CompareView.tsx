@@ -10,6 +10,7 @@ import { fmtGrams, fmtKcal, fmtNok } from "@/lib/format";
 import { useCompare } from "@/lib/client/compare";
 import { useLocation } from "@/lib/client/location";
 import { track } from "@/lib/client/loading";
+import { backend } from "@/lib/client/backend";
 import type { MealView } from "@/server/repo/menu";
 import { MacroBar } from "./MacroBar";
 import { ProvenanceChip } from "./Provenance";
@@ -27,7 +28,7 @@ export function CompareView() {
       setMeals([]);
       return;
     }
-    track(fetch(`/api/items?ids=${ids}`)).then((r) => r.json()).then((j) => setMeals(j.meals ?? []));
+    track(backend.meals(ids.split(","))).then(setMeals).catch(() => setMeals([]));
   }, [ids]);
 
   const cols: Col[] = useMemo(

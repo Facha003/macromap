@@ -1,6 +1,6 @@
 import "server-only";
 import type { EstimateProvider } from "@/lib/nutrition/types";
-import { extractJson } from "./interpret";
+import { extractJson } from "@/lib/nutrition/llm";
 
 export interface LlmProvider {
   id: Extract<EstimateProvider, "gemini" | "groq" | "ollama" | "anthropic">;

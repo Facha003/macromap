@@ -2,7 +2,7 @@
 import Link from "next/link";
 import { useOptimistic, useTransition } from "react";
 import { ChevronLeft, ChevronRight, Minus, Plus, RotateCcw, Trash2, UtensilsCrossed } from "lucide-react";
-import { deleteEntryAction, repeatEntry, setEntryPortion } from "@/app/actions";
+import { backend } from "@/lib/client/backend";
 import { fmtDay, fmtLikely, PROVIDER_LABEL, shiftDay } from "@/lib/format";
 import type { Goals } from "@/lib/scoring";
 import type { DataStatus, EstimateProvider } from "@/lib/nutrition/types";
@@ -32,9 +32,9 @@ export function DiaryView(props: {
   today: string;
   goals: Goals;
   entries: Entry[];
-  totals: { kcal: number; kcalMin: number; kcalMax: number; protein: number; carbs: number; fat: number };
   recent: { id: string; name: string; restaurantName: string | null; kcal: number; protein: number }[];
   week: { day: string; kcal: number }[];
+  onChanged: () => Promise<void>;
 }) {
   const { day, today, goals } = props;
   const [pending, start] = useTransition();
@@ -119,8 +119,8 @@ export function DiaryView(props: {
                     <span className="tabular w-12 text-center text-xs font-medium">{e.portion}×</span>
                     <button disabled={pending} className="p-2" aria-label="Increase portion" onClick={() => change(e, 0.25)}><Plus size={14} /></button>
                   </div>
-                  <button disabled={pending} aria-label="Log again" title="Log again today" className="rounded-xl bg-surface-2 p-2" onClick={() => start(() => repeatEntry(e.id))}><RotateCcw size={14} /></button>
-                  <button disabled={pending} aria-label="Delete entry" className="rounded-xl bg-surface-2 p-2 text-danger" onClick={() => start(async () => { update({ type: "delete", id: e.id }); await deleteEntryAction(e.id); })}><Trash2 size={14} /></button>
+                  <button disabled={pending} aria-label="Log again" title="Log again today" className="rounded-xl bg-surface-2 p-2" onClick={() => start(async () => { await backend.repeatEntry(e.id); await props.onChanged(); })}><RotateCcw size={14} /></button>
+                  <button disabled={pending} aria-label="Delete entry" className="rounded-xl bg-surface-2 p-2 text-danger" onClick={() => start(async () => { update({ type: "delete", id: e.id }); await backend.deleteEntry(e.id); await props.onChanged(); })}><Trash2 size={14} /></button>
                 </div>
               </li>
             ))}
@@ -134,7 +134,7 @@ export function DiaryView(props: {
           <ul className="flex gap-2 overflow-x-auto pb-1">
             {props.recent.map((r) => (
               <li key={r.id} className="shrink-0">
-                <button disabled={pending} onClick={() => start(() => repeatEntry(r.id, day))} className="card w-44 p-3 text-left transition hover:border-ink-3/40">
+                <button disabled={pending} onClick={() => start(async () => { await backend.repeatEntry(r.id, day); await props.onChanged(); })} className="card w-44 p-3 text-left transition hover:border-ink-3/40">
                   <p className="truncate text-sm font-medium">{r.name}</p>
                   <p className="truncate text-[11px] text-ink-2">{r.restaurantName}</p>
                   <p className="tabular mt-1 text-xs text-ink-2">≈{fmtLikely(r.kcal, 10)} kcal · {Math.round(r.protein)} g P</p>
@@ -172,7 +172,8 @@ export function DiaryView(props: {
     const portion = Math.min(5, Math.max(0.25, Math.round((e.portion + delta) * 100) / 100));
     start(async () => {
       update({ type: "portion", id: e.id, portion });
-      await setEntryPortion(e.id, portion);
+      await backend.setEntryPortion(e.id, portion);
+      await props.onChanged();
     });
   }
 }

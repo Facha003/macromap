@@ -11,7 +11,21 @@ Find restaurant meals near you that fit your calories and macros, with nutrition
 - **Goals**: cutting / bulking / maintenance / healthy / custom, with suggested targets.
 - **Privacy**: export or delete your data. Location never leaves the browser except as search coordinates.
 
-## Run it on GitHub (no install)
+## Live site (GitHub Pages)
+
+**https://facha003.github.io/macromap/**
+
+The GitHub Pages version runs entirely in your browser:
+- Restaurants come straight from OpenStreetMap.
+- Nutrition uses the same estimation engine.
+- Your diary, goals and saved items stay in your browser's storage.
+- AI estimates are optional: paste a free Gemini key in **Profile**.
+
+It's rebuilt by `.github/workflows/pages.yml` on every push to `main`. To build it yourself, run `NEXT_PUBLIC_BASE_PATH=/macromap npm run build:static`; the output goes to `out/`.
+
+The full server version below adds a shared database, accounts and a server-side AI key.
+
+## Run it on GitHub Codespaces (no install)
 
 [![Open in GitHub Codespaces](https://github.com/codespaces/badge.svg)](https://codespaces.new/Facha003/macromap?quickstart=1)
 

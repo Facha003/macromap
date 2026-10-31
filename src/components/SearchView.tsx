@@ -5,8 +5,9 @@ import { Loader2, MapPin, Search, SlidersHorizontal } from "lucide-react";
 import { formatDistance } from "@/lib/geo";
 import { useLocation } from "@/lib/client/location";
 import { track } from "@/lib/client/loading";
+import { backend, type SearchApiResponse } from "@/lib/client/backend";
 import type { MealFilters } from "@/lib/queryParser";
-import type { MealResult, SearchResponse } from "@/server/search";
+import type { MealResult } from "@/lib/searchCore";
 import { MealRow } from "./MealRow";
 import { MealSheet } from "./MealSheet";
 import { cuisineLabel } from "./RestaurantCard";
@@ -19,7 +20,7 @@ export function SearchView({ initialQuery = "" }: { initialQuery?: string }) {
   const { location, ready } = useLocation();
   const [q, setQ] = useState(initialQuery);
   const [ov, setOv] = useState<Overrides>({});
-  const [data, setData] = useState<(SearchResponse & { filters: MealFilters; remainingKcal: number }) | null>(null);
+  const [data, setData] = useState<SearchApiResponse | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [open, setOpen] = useState<MealResult | null>(null);
@@ -36,10 +37,7 @@ export function SearchView({ initialQuery = "" }: { initialQuery?: string }) {
       }
       for (const [k, v] of Object.entries(o)) if (v !== undefined) p.set(k, v === true ? "1" : v === false ? "0" : String(v));
       try {
-        const res = await track(fetch(`/api/search?${p}`));
-        const j = await res.json();
-        if (!res.ok) throw new Error(j.error);
-        setData(j);
+        setData(await track(backend.search(p)));
       } catch (e) {
         setError((e as Error).message || "Search failed");
       } finally {
@@ -189,7 +187,7 @@ export function SearchView({ initialQuery = "" }: { initialQuery?: string }) {
                 <ul className="divide-y divide-line overflow-hidden rounded-[20px] border border-line bg-surface">
                   {data.noMenuMatches.map((r) => (
                     <li key={r.id}>
-                      <Link href={`/r/${encodeURIComponent(r.id)}`} className="flex items-center justify-between px-4 py-3 text-sm hover:bg-surface-2">
+                      <Link href={`/r/?id=${encodeURIComponent(r.id)}`} className="flex items-center justify-between px-4 py-3 text-sm hover:bg-surface-2">
                         <span><span className="font-medium">{r.name}</span> <span className="text-xs text-ink-2">{r.cuisines.slice(0, 2).map(cuisineLabel).join(", ")}</span></span>
                         <span className="text-xs text-ink-3">{formatDistance(r.distanceM)} · add a dish</span>
                       </Link>

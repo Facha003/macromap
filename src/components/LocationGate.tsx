@@ -4,6 +4,7 @@ import { Loader2, LocateFixed, MapPin, Search } from "lucide-react";
 import { OSLO } from "@/lib/geo";
 import { useLocation, type UserLocation } from "@/lib/client/location";
 import { startLoading, track } from "@/lib/client/loading";
+import { backend } from "@/lib/client/backend";
 
 export function LocationGate({ onDone }: { onDone?: () => void }) {
   const { setLocation } = useLocation();
@@ -46,11 +47,9 @@ export function LocationGate({ onDone }: { onDone?: () => void }) {
     setBusy("search");
     setError(null);
     try {
-      const res = await track(fetch(`/api/geocode?q=${encodeURIComponent(q)}`));
-      const json = await res.json();
-      if (!res.ok) throw new Error(json.error);
-      setResults(json.results);
-      if (!json.results.length) setError("No places found. Try a street, neighbourhood or city.");
+      const results = await track(backend.geocode(q));
+      setResults(results);
+      if (!results.length) setError("No places found. Try a street, neighbourhood or city.");
     } catch {
       setError("Address search is unavailable right now.");
     } finally {

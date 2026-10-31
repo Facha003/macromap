@@ -1,23 +1,26 @@
+"use client";
 import Link from "next/link";
-import { notFound } from "next/navigation";
 import { ArrowLeft, Clock, ExternalLink, Info, Phone } from "lucide-react";
-import { MenuList } from "@/components/MenuList";
-import { DemoBadge } from "@/components/Provenance";
-import { cuisineLabel } from "@/components/RestaurantCard";
-import { SaveRestaurantButton } from "@/components/SaveRestaurantButton";
-import { getSession } from "@/server/auth";
-import { getLlmProvider } from "@/server/nutrition/llm/providers";
-import { getRestaurant, mealViews } from "@/server/repo/menu";
-import { listFavorites, listSavedRestaurants } from "@/server/repo/user";
+import { backend } from "@/lib/client/backend";
+import { useData } from "@/lib/client/useData";
+import { MenuList } from "./MenuList";
+import { DemoBadge } from "./Provenance";
+import { cuisineLabel } from "./RestaurantCard";
+import { SaveRestaurantButton } from "./SaveRestaurantButton";
 
-export const dynamic = "force-dynamic";
+export function RestaurantView({ id }: { id: string }) {
+  const { data, error, reload } = useData(() => backend.restaurant(id), [id]);
 
-export default async function RestaurantPage({ params }: { params: Promise<{ id: string }> }) {
-  const id = decodeURIComponent((await params).id);
-  const r = await getRestaurant(id);
-  if (!r) notFound();
-  const { userId } = await getSession();
-  const [meals, favs, saved] = await Promise.all([mealViews({ restaurantIds: [r.id] }), listFavorites(userId), listSavedRestaurants(userId)]);
+  if (error) return <p className="card p-6 text-sm text-ink-2">Couldn’t load this restaurant. {error}</p>;
+  if (data === null) return <div className="space-y-3"><div className="h-20 animate-pulse rounded-[20px] bg-surface-2" /><div className="h-32 animate-pulse rounded-[20px] bg-surface-2" /></div>;
+  if (!data) {
+    return (
+      <div className="card p-6 text-center text-sm text-ink-2">
+        Restaurant not found. <Link href="/" className="underline">Back to Explore</Link>
+      </div>
+    );
+  }
+  const { restaurant: r, meals } = data;
   const osmUrl = r.provider === "osm" ? `https://www.openstreetmap.org/${r.providerId}` : null;
 
   return (
@@ -34,7 +37,7 @@ export default async function RestaurantPage({ params }: { params: Promise<{ id:
               {[r.cuisines.map(cuisineLabel).join(", ") || (r.amenity && cuisineLabel(r.amenity)), r.address].filter(Boolean).join(" · ")}
             </p>
           </div>
-          <SaveRestaurantButton restaurantId={r.id} initial={saved.some((s) => s.restaurantId === r.id)} />
+          <SaveRestaurantButton key={String(data.saved)} restaurantId={r.id} initial={data.saved} />
         </div>
         <div className="mt-3 flex flex-wrap gap-2 text-xs">
           {r.tags.website && <a href={r.tags.website} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1 rounded-full bg-surface-2 px-3 py-1.5"><ExternalLink size={12} />Official website / menu</a>}
@@ -57,7 +60,7 @@ export default async function RestaurantPage({ params }: { params: Promise<{ id:
         </p>
       )}
 
-      <MenuList meals={meals} favoriteIds={favs.map((f) => f.menuItemId)} restaurantId={r.id} aiEnabled={Boolean(getLlmProvider())} />
+      <MenuList meals={meals} favoriteIds={data.favoriteIds} restaurantId={r.id} aiEnabled={data.aiEnabled} onChanged={reload} />
     </div>
   );
 }

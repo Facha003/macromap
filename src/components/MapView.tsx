@@ -38,7 +38,7 @@ export function MapView({ center, radiusM, points }: { center: { lat: number; ln
     (async () => {
       const ml = await import("maplibre-gl");
       if (cancelled || !el.current || map.current) return;
-      ml.setWorkerUrl("/maplibre-gl-worker.mjs");
+      ml.setWorkerUrl(`${process.env.NEXT_PUBLIC_BASE_PATH ?? ""}/maplibre-gl-worker.mjs`);
       map.current = new ml.Map({
         container: el.current,
         style: `https://tiles.openfreemap.org/styles/${isDark() ? "dark" : "positron"}`,
@@ -85,9 +85,9 @@ export function MapView({ center, radiusM, points }: { center: { lat: number; ln
         ? "h-[18px] w-[18px] rounded-full border-2 border-[var(--surface)] bg-[var(--ink)] shadow ring-2 ring-[var(--ink)]/10 cursor-pointer"
         : "h-3 w-3 rounded-full border-2 border-[var(--surface)] bg-[var(--ink-3)] cursor-pointer";
       const popup = new ml.Popup({ offset: 12, closeButton: false }).setHTML(
-        `<div style="font:13px var(--font-sans);color:#111"><strong>${p.name.replace(/</g, "&lt;")}</strong><br/><span style="color:#555">${p.subtitle.replace(/</g, "&lt;")}</span><br/><a href="/r/${encodeURIComponent(p.id)}" style="color:#2a78d6;font-weight:600">Open menu →</a></div>`,
+        `<div style="font:13px var(--font-sans);color:#111"><strong>${p.name.replace(/</g, "&lt;")}</strong><br/><span style="color:#555">${p.subtitle.replace(/</g, "&lt;")}</span><br/><a href="${process.env.NEXT_PUBLIC_BASE_PATH ?? ""}/r/?id=${encodeURIComponent(p.id)}" style="color:#2a78d6;font-weight:600">Open menu →</a></div>`,
       );
-      dot.addEventListener("dblclick", () => router.push(`/r/${encodeURIComponent(p.id)}`));
+      dot.addEventListener("dblclick", () => router.push(`/r/?id=${encodeURIComponent(p.id)}`));
       markers.current.push(new ml.Marker({ element: dot }).setLngLat([p.lng, p.lat]).setPopup(popup).addTo(m));
     }
   };

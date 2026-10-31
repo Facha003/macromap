@@ -1,8 +1,8 @@
 "use client";
 import { useState, useTransition } from "react";
-import { Check, Database, Download, Loader2, LogOut, Mail, ShieldCheck, Sparkles, Trash2 } from "lucide-react";
-import { deleteMyData, saveGoals, setShowDemo, signInWithEmail, signOut, suggestTargets } from "@/app/actions";
-import type { GoalType } from "@/lib/scoring";
+import { Check, Database, Download, KeyRound, Loader2, LogOut, Mail, ShieldCheck, Sparkles, Trash2 } from "lucide-react";
+import { backend } from "@/lib/client/backend";
+import { presetTargets, type GoalType } from "@/lib/scoring";
 import { fmtDate } from "@/lib/format";
 import { ThemeToggle } from "./ThemeToggle";
 
@@ -16,7 +16,7 @@ const GOALS: { id: GoalType; label: string; hint: string }[] = [
   { id: "custom", label: "Custom", hint: "Set your own targets" },
 ];
 
-export function ProfileView({ profile, account, system }: { profile: ProfileData; account: { kind: string; email: string | null; supabase: boolean }; system: { ai: string | null; places: string; foods: string[]; foodsRetrievedAt: string } }) {
+export function ProfileView({ profile, account, system, onChanged }: { profile: ProfileData; account: { kind: string; email: string | null; supabase: boolean }; system: { ai: string | null; places: string; foods: string[]; foodsRetrievedAt: string }; onChanged: () => Promise<void> }) {
   const [g, setG] = useState(profile);
   const [maintenance, setMaintenance] = useState(2400);
   const [saved, setSaved] = useState(false);
@@ -37,10 +37,7 @@ export function ProfileView({ profile, account, system }: { profile: ProfileData
   const applyPreset = (goalType: GoalType) => {
     setSaved(false);
     if (goalType === "custom") return setG({ ...g, goalType });
-    start(async () => {
-      const t = await suggestTargets(goalType, maintenance, g.weightKg);
-      setG({ ...g, ...t, goalType });
-    });
+    setG({ ...g, ...presetTargets(goalType, Math.min(6000, Math.max(1200, maintenance)), g.weightKg), goalType });
   };
 
   const macroKcal = g.proteinG * 4 + g.carbsG * 4 + g.fatG * 9;
@@ -86,7 +83,7 @@ export function ProfileView({ profile, account, system }: { profile: ProfileData
         )}
         <button
           disabled={pending}
-          onClick={() => start(async () => { await saveGoals(g); setSaved(true); })}
+          onClick={() => start(async () => { await backend.saveGoals(g); setSaved(true); })}
           className="flex w-full items-center justify-center gap-2 rounded-xl bg-accent py-3 text-sm font-semibold text-accent-ink disabled:opacity-60"
         >
           {pending ? <Loader2 size={16} className="animate-spin" /> : saved ? <Check size={16} /> : null}
@@ -102,7 +99,7 @@ export function ProfileView({ profile, account, system }: { profile: ProfileData
             <span className="block text-sm font-medium">Show demo restaurants</span>
             <span className="block text-xs text-ink-2">Fictional Oslo restaurants with illustrative menus, to try the full experience. Always labelled “Demo”.</span>
           </span>
-          <input type="checkbox" checked={g.showDemo} onChange={(e) => { setG({ ...g, showDemo: e.target.checked }); start(() => setShowDemo(e.target.checked)); }} className="mt-1 h-5 w-5 accent-[var(--ink)]" />
+          <input type="checkbox" checked={g.showDemo} onChange={(e) => { setG({ ...g, showDemo: e.target.checked }); start(() => backend.setShowDemo(e.target.checked)); }} className="mt-1 h-5 w-5 accent-[var(--ink)]" />
         </label>
       </section>
 
@@ -111,10 +108,10 @@ export function ProfileView({ profile, account, system }: { profile: ProfileData
         {account.kind === "supabase" ? (
           <div className="flex items-center justify-between text-sm">
             <span>Signed in as {account.email}</span>
-            <button onClick={() => start(() => signOut())} className="inline-flex items-center gap-1 text-ink-2"><LogOut size={14} />Sign out</button>
+            <button onClick={() => start(async () => { await backend.signOut(); await onChanged(); })} className="inline-flex items-center gap-1 text-ink-2"><LogOut size={14} />Sign out</button>
           </div>
         ) : account.supabase ? (
-          <form onSubmit={(e) => { e.preventDefault(); start(async () => { const r = await signInWithEmail(email); setAuthMsg(r.ok ? "Check your email for a sign-in link." : r.error ?? "Sign-in failed"); }); }} className="space-y-2">
+          <form onSubmit={(e) => { e.preventDefault(); start(async () => { const r = await backend.signIn(email); setAuthMsg(r.ok ? "Check your email for a sign-in link." : r.error ?? "Sign-in failed"); }); }} className="space-y-2">
             <p className="text-xs text-ink-2">Sign in to sync your diary across devices.</p>
             <div className="flex gap-2">
               <input type="email" required value={email} onChange={(e) => setEmail(e.target.value)} placeholder="you@example.com" className="flex-1 rounded-xl border border-line bg-bg px-3 py-2.5 text-sm" />
@@ -122,6 +119,8 @@ export function ProfileView({ profile, account, system }: { profile: ProfileData
             </div>
             {authMsg && <p className="text-xs text-ink-2">{authMsg}</p>}
           </form>
+        ) : backend.mode === "static" ? (
+          <p className="text-sm text-ink-2">This is the browser-only version: your goals, diary and saved items are stored in this browser only. Use Export to back them up.</p>
         ) : (
           <p className="text-sm text-ink-2">You’re using MacroMap without an account. Your diary is stored on this server under an anonymous browser ID.</p>
         )}
@@ -129,17 +128,19 @@ export function ProfileView({ profile, account, system }: { profile: ProfileData
 
       <section className="card space-y-3 p-5">
         <h2 className="flex items-center gap-2 font-semibold"><ShieldCheck size={16} />Privacy &amp; your data</h2>
-        <p className="text-xs text-ink-2">We store only your goals, diary and saved items. Location is used in your browser to search and isn’t stored on the server. AI estimation sends only menu text — never your personal data.</p>
+        <p className="text-xs text-ink-2">We store only your goals, diary and saved items. Your location is used only to look up nearby places on OpenStreetMap and is never saved with your data. AI estimation sends only menu text — never your personal data.</p>
         <div className="flex flex-wrap gap-2">
-          <a href="/api/export" className="inline-flex items-center gap-1.5 rounded-xl bg-surface-2 px-3 py-2 text-sm"><Download size={15} />Export my data</a>
+          <button onClick={() => start(downloadExport)} className="inline-flex items-center gap-1.5 rounded-xl bg-surface-2 px-3 py-2 text-sm"><Download size={15} />Export my data</button>
           <button
-            onClick={() => { if (confirm("Delete your goals, diary and saved items? This can’t be undone.")) start(() => deleteMyData()); }}
+            onClick={() => { if (confirm("Delete your goals, diary and saved items? This can’t be undone.")) start(async () => { await backend.deleteMyData(); await onChanged(); }); }}
             className="inline-flex items-center gap-1.5 rounded-xl bg-surface-2 px-3 py-2 text-sm text-danger"
           >
             <Trash2 size={15} />Delete my data
           </button>
         </div>
       </section>
+
+      {backend.aiKey && <AiKeyCard onSaved={onChanged} />}
 
       <section className="card space-y-2 p-5 text-xs text-ink-2">
         <h2 className="flex items-center gap-2 text-sm font-semibold text-ink"><Database size={16} />Data sources &amp; how numbers are made</h2>
@@ -151,5 +152,43 @@ export function ProfileView({ profile, account, system }: { profile: ProfileData
         <p>Food-composition data retrieved {fmtDate(system.foodsRetrievedAt)}. Verified values come only from restaurants. Estimates are computed from ingredients and portion ranges and always shown as ranges; AI never produces nutrient numbers itself. We don’t claim a fixed accuracy — see the validation plan in the project docs.</p>
       </section>
     </div>
+  );
+}
+
+async function downloadExport() {
+  const data = await backend.exportData();
+  const url = URL.createObjectURL(new Blob([JSON.stringify(data, null, 2)], { type: "application/json" }));
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = "macromap-export.json";
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+/** Static (GitHub Pages) build only: the user's own free Gemini key, kept in this browser. */
+function AiKeyCard({ onSaved }: { onSaved: () => Promise<void> }) {
+  const [key, setKey] = useState(() => backend.aiKey?.get() ?? "");
+  const [saved, setSaved] = useState(false);
+  return (
+    <section className="card space-y-3 p-5">
+      <h2 className="flex items-center gap-2 font-semibold"><KeyRound size={16} />AI estimates (optional)</h2>
+      <p className="text-xs text-ink-2">
+        Paste a free Google Gemini key from{" "}
+        <a href="https://aistudio.google.com/apikey" target="_blank" rel="noreferrer" className="underline">aistudio.google.com/apikey</a>{" "}
+        to analyse any dish. The key is stored only in this browser and sent only to Google, along with the dish’s menu text.
+      </p>
+      <form
+        onSubmit={async (e) => {
+          e.preventDefault();
+          backend.aiKey?.set(key);
+          setSaved(true);
+          await onSaved();
+        }}
+        className="flex gap-2"
+      >
+        <input type="password" autoComplete="off" value={key} onChange={(e) => { setKey(e.target.value); setSaved(false); }} placeholder="Gemini API key" className="flex-1 rounded-xl border border-line bg-bg px-3 py-2.5 text-sm" />
+        <button className="rounded-xl bg-accent px-4 text-sm font-semibold text-accent-ink">{saved ? "Saved" : "Save"}</button>
+      </form>
+    </section>
   );
 }

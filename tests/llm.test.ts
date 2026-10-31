@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { buildPrompt, extractJson, interpretationToBasis } from "@/server/nutrition/llm/interpret";
+import { buildPrompt, extractJson, interpretationToBasis } from "@/lib/nutrition/llm";
 import { resolveBasis } from "@/lib/nutrition/basis";
 
 describe("LLM interpretation", () => {
