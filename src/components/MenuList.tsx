@@ -1,7 +1,7 @@
 "use client";
 import { useMemo, useState } from "react";
 import Link from "next/link";
-import { ClipboardPaste, ExternalLink, Globe, Loader2, Plus, Sparkles } from "lucide-react";
+import { ClipboardPaste, ExternalLink, Globe, Loader2, Plus, Sparkles, Trash2 } from "lucide-react";
 import { parseMenuText, type ParsedDish } from "@/lib/menuParse";
 import type { FoundMenu } from "@/lib/menuFinder";
 import { containsPork } from "@/lib/halal";
@@ -29,6 +29,18 @@ export function MenuList({ meals, favoriteIds, restaurantId, restaurantName, web
     return acc;
   }, {});
   const typicalOnly = meals.length > 0 && meals.every((m) => m.sourceType === "typical");
+  const mine = meals.filter((m) => m.addedByMe);
+  const [deleting, setDeleting] = useState(false);
+  const deleteMine = async () => {
+    if (!confirm(`Delete all ${mine.length} dishes you added to this restaurant? Meals you already logged stay in your diary.`)) return;
+    setDeleting(true);
+    try {
+      await track(backend.deleteDishes(mine.map((m) => m.id)));
+      onChanged();
+    } finally {
+      setDeleting(false);
+    }
+  };
   return (
     <>
       {hidden > 0 && <p className="mb-3 text-xs text-ink-2">Halal only: hid {hidden} dish{hidden === 1 ? "" : "es"} with pork.</p>}
@@ -46,6 +58,11 @@ export function MenuList({ meals, favoriteIds, restaurantId, restaurantName, web
           </ul>
         </section>
       ))}
+      {mine.length > 0 && (
+        <button onClick={deleteMine} disabled={deleting} className="mb-3 flex w-full items-center justify-center gap-2 rounded-[20px] border border-line py-3 text-sm text-danger disabled:opacity-60">
+          {deleting ? <Loader2 size={15} className="animate-spin" /> : <Trash2 size={15} />}Delete all {mine.length} dishes you added
+        </button>
+      )}
       {!(!isDemo && (typicalOnly || meals.length === 0)) && (
         <AddDishes restaurantId={restaurantId} restaurantName={restaurantName} website={website} isDemo={isDemo} aiEnabled={aiEnabled} startOpen={false} onAdded={onChanged} />
       )}

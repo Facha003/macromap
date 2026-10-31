@@ -1,7 +1,7 @@
 import "server-only";
 import { and, desc, eq, gte, lte, sql } from "drizzle-orm";
 import { getDb } from "../db";
-import { diaryEntries, favorites, profiles, savedRestaurants } from "../db/schema";
+import { diaryEntries, favorites, menuItems, profiles, savedRestaurants } from "../db/schema";
 
 export type Profile = typeof profiles.$inferSelect;
 export type DiaryEntry = typeof diaryEntries.$inferSelect;
@@ -149,6 +149,8 @@ export async function exportUserData(userId: string) {
 
 export async function deleteUserData(userId: string) {
   const db = await getDb();
+  // Dishes this user added to restaurant menus go too.
+  await db.delete(menuItems).where(and(eq(menuItems.createdBy, userId), eq(menuItems.sourceType, "community")));
   await db.delete(diaryEntries).where(eq(diaryEntries.userId, userId));
   await db.delete(favorites).where(eq(favorites.userId, userId));
   await db.delete(savedRestaurants).where(eq(savedRestaurants.userId, userId));

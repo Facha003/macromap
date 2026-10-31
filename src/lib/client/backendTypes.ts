@@ -93,6 +93,8 @@ export interface Backend {
   addDish(restaurantId: string, input: { name: string; description?: string; priceNok: number | null }): Promise<void>;
   /** Bulk import from a pasted menu; estimates run lazily when each dish is opened. */
   addDishes(restaurantId: string, items: NewDish[]): Promise<number>;
+  /** Deletes dishes the user added; returns how many were removed. */
+  deleteDishes(ids: string[]): Promise<number>;
   /** Restaurant name search (whole country in the static build). */
   searchRestaurants(q: string, lat: number, lng: number): Promise<RestaurantHit[]>;
   /** AI web search for the restaurant's current menu, with source links. */

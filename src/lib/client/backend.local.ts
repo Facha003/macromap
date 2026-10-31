@@ -299,6 +299,7 @@ function toView(item: Item): MealView | null {
     id: item.id, name: item.name, description: item.description, category: item.category, priceNok: item.priceNok,
     sourceType: item.sourceType, sourceUrl: item.sourceUrl ?? null, lastChecked: item.createdAt, statedDiet: item.statedDiet,
     basis, estimatedAt: item.createdAt, model,
+    addedByMe: item.sourceType === "community",
     restaurant: { id: r.id, name: r.name, isDemo: r.isDemo, lat: r.lat, lng: r.lng, cuisines: r.cuisines, halal: r.tags.halal === "yes" || r.tags.halal === "only", halalTag: r.tags.halal ?? null },
   };
 }
@@ -496,6 +497,18 @@ export const backend: Backend = {
       .map((d) => ({ id: `local:${uid()}`, restaurantId, name: d.name.trim().slice(0, 120), description: d.description?.trim().slice(0, 500) || null, category: d.category || "Added by you", priceNok: d.priceNok, sourceType: "community" as const, sourceUrl: d.sourceUrl ?? null, statedDiet: {}, createdAt: now }));
     save("community", [...load<Item[]>("community", []), ...fresh]);
     return fresh.length;
+  },
+
+  async deleteDishes(ids) {
+    const drop = new Set(ids);
+    const before = load<Item[]>("community", []);
+    const after = before.filter((i) => !drop.has(i.id));
+    save("community", after);
+    const ai = { ...load<Record<string, AiRecord>>("ai", {}) };
+    ids.forEach((id) => delete ai[id]);
+    save("ai", ai);
+    save("favorites", load<{ menuItemId: string }[]>("favorites", []).filter((f) => !drop.has(f.menuItemId)));
+    return before.length - after.length;
   },
 
   async logMeal({ menuItemId, selections, portion, day }) {

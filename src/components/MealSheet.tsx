@@ -2,7 +2,7 @@
 import { useEffect, useMemo, useState, useTransition } from "react";
 import Link from "next/link";
 import { AnimatePresence, motion } from "framer-motion";
-import { Check, ChevronDown, ExternalLink, GitCompareArrows, Heart, Loader2, Minus, Plus, X } from "lucide-react";
+import { Check, ChevronDown, ExternalLink, GitCompareArrows, Heart, Loader2, Minus, Plus, Trash2, X } from "lucide-react";
 import { resolveBasis, type EstimateBasis } from "@/lib/nutrition/basis";
 import { activeChoices, type OptionGroup, type Selections } from "@/lib/nutrition/customize";
 import { food, proteinPer100kcal } from "@/lib/nutrition/estimate";
@@ -92,6 +92,23 @@ export function MealSheet({ meal, onClose, initialSelections = {}, isFavorite = 
               {meal.priceNok ? ` · ${fmtNok(meal.priceNok)}` : ""}
             </p>
           </div>
+          {meal.addedByMe && (
+            <button
+              onClick={() => {
+                if (!confirm(`Delete “${meal.name}”? Meals you already logged stay in your diary.`)) return;
+                start(async () => {
+                  await track(backend.deleteDishes([meal.id]));
+                  onClose();
+                });
+              }}
+              disabled={pending}
+              className="rounded-full bg-surface-2 p-2 text-danger"
+              aria-label="Delete this dish"
+              title="Delete this dish"
+            >
+              <Trash2 size={18} />
+            </button>
+          )}
           <button onClick={onClose} className="rounded-full bg-surface-2 p-2" aria-label="Close"><X size={18} /></button>
         </div>
 

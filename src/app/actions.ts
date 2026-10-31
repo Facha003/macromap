@@ -10,7 +10,7 @@ import { getLlmProvider } from "@/server/nutrition/llm/providers";
 import { placesProvider } from "@/server/places";
 import { getSession, supabaseConfigured, supabaseServer } from "@/server/auth";
 import { getItemBasis } from "@/server/nutrition/service";
-import { getMenuItem, getRestaurant, mealViews, typicalViewById, typicalViews } from "@/server/repo/menu";
+import { deleteOwnDishes, getMenuItem, getRestaurant, mealViews, typicalViewById, typicalViews } from "@/server/repo/menu";
 import { parseTypicalId } from "@/lib/typicalDishes";
 import { templateBasis } from "@/lib/nutrition/basis";
 import * as repo from "@/server/repo/user";
@@ -162,7 +162,7 @@ export async function getRestaurantPage(id: string): Promise<RestaurantPageData 
   const r = await getRestaurant(z.string().min(1).max(200).parse(id));
   if (!r) return null;
   const { userId } = await getSession();
-  const [real, favs, saved] = await Promise.all([mealViews({ restaurantIds: [r.id] }), repo.listFavorites(userId), repo.listSavedRestaurants(userId)]);
+  const [real, favs, saved] = await Promise.all([mealViews({ restaurantIds: [r.id] }, userId), repo.listFavorites(userId), repo.listSavedRestaurants(userId)]);
   return {
     restaurant: { id: r.id, name: r.name, provider: r.provider, providerId: r.providerId, isDemo: r.isDemo, cuisines: r.cuisines, amenity: r.amenity, address: r.address, lat: r.lat, lng: r.lng, tags: r.tags },
     meals: real.length ? real : typicalViews(r),
@@ -190,7 +190,7 @@ export async function getDiary(requestedDay: string | null): Promise<DiaryData> 
 export async function getSaved(): Promise<SavedData> {
   const { userId } = await getSession();
   const [favs, saved] = await Promise.all([repo.listFavorites(userId), repo.listSavedRestaurants(userId)]);
-  const meals = await mealViews({ itemIds: favs.map((f) => f.menuItemId) });
+  const meals = await mealViews({ itemIds: favs.map((f) => f.menuItemId) }, userId);
   const restaurants = (await Promise.all(saved.map((s) => getRestaurant(s.restaurantId)))).filter((r) => r !== null);
   return {
     favorites: favs.flatMap((f) => {
@@ -210,4 +210,12 @@ export async function getProfilePage(): Promise<ProfileData> {
     account: { kind: session.kind, email: session.email, supabase: supabaseConfigured() },
     system: { ai: llm ? `${llm.id} · ${llm.model}` : null, places: placesProvider().attribution, foods: Object.values(FOOD_ATTRIBUTION), foodsRetrievedAt: FOODS_RETRIEVED_AT },
   };
+}
+
+/** Removes dishes the current user added (others' dishes are untouched). */
+export async function deleteDishes(ids: string[]): Promise<number> {
+  const { userId } = await getSession();
+  const n = await deleteOwnDishes(userId, z.array(z.string().max(200)).max(200).parse(ids));
+  revalidatePath("/saved");
+  return n;
 }

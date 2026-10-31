@@ -141,7 +141,7 @@ export function ProfileView({ profile, account, system, onChanged }: { profile: 
         <div className="flex flex-wrap gap-2">
           <button onClick={() => start(downloadExport)} className="inline-flex items-center gap-1.5 rounded-xl bg-surface-2 px-3 py-2 text-sm"><Download size={15} />Export my data</button>
           <button
-            onClick={() => { if (confirm("Delete your goals, diary and saved items? This can’t be undone.")) start(async () => { await backend.deleteMyData(); await onChanged(); }); }}
+            onClick={() => { if (confirm("Delete your goals, diary, saved items and the dishes you added? This can’t be undone.")) start(async () => { await backend.deleteMyData(); await onChanged(); }); }}
             className="inline-flex items-center gap-1.5 rounded-xl bg-surface-2 px-3 py-2 text-sm text-danger"
           >
             <Trash2 size={15} />Delete my data

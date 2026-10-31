@@ -24,6 +24,8 @@ export interface MealView {
   estimatedAt: string;
   model: string | null;
   restaurant: { id: string; name: string; isDemo: boolean; lat: number; lng: number; cuisines: string[]; halal: boolean; halalTag?: string | null };
+  /** True when the current user added this dish (and so may delete it). */
+  addedByMe?: boolean;
 }
 
 export async function getRestaurant(id: string): Promise<Restaurant | null> {
@@ -62,10 +64,10 @@ export async function typicalViewById(id: string): Promise<MealView | null> {
   return r && found ? typicalView(r, t.slug, found.dish.name, found.dish.description, found.label) : null;
 }
 
-export async function mealViews(where: { restaurantIds?: string[]; itemIds?: string[] }): Promise<MealView[]> {
+export async function mealViews(where: { restaurantIds?: string[]; itemIds?: string[] }, viewerId?: string): Promise<MealView[]> {
   if (where.itemIds?.some((id) => parseTypicalId(id))) {
     const typical = (await Promise.all(where.itemIds.filter((id) => parseTypicalId(id)).map(typicalViewById))).filter((m): m is MealView => m !== null);
-    const real = await mealViews({ ...where, itemIds: where.itemIds.filter((id) => !parseTypicalId(id)) });
+    const real = await mealViews({ ...where, itemIds: where.itemIds.filter((id) => !parseTypicalId(id)) }, viewerId);
     return [...real, ...typical];
   }
   const db = await getDb();
@@ -96,6 +98,7 @@ export async function mealViews(where: { restaurantIds?: string[]; itemIds?: str
       basis: rec.basis,
       estimatedAt: rec.createdAt.toISOString(),
       model: rec.model,
+      addedByMe: Boolean(viewerId && item.sourceType === "community" && item.createdBy === viewerId),
       restaurant: { id: r.id, name: r.name, isDemo: r.isDemo, lat: r.lat, lng: r.lng, cuisines: r.cuisines, halal: r.tags.halal === "yes" || r.tags.halal === "only", halalTag: r.tags.halal ?? null },
     };
   });
@@ -117,4 +120,16 @@ export async function createCommunityItem(restaurantId: string, userId: string, 
     })
     .returning();
   return row;
+}
+
+/** Deletes dishes the user added themselves; returns how many were removed. */
+export async function deleteOwnDishes(userId: string, ids: string[]): Promise<number> {
+  const uuids = ids.filter((id) => /^[0-9a-f-]{36}$/.test(id));
+  if (!uuids.length) return 0;
+  const db = await getDb();
+  const removed = await db
+    .delete(menuItems)
+    .where(and(inArray(menuItems.id, uuids), eq(menuItems.createdBy, userId), eq(menuItems.sourceType, "community")))
+    .returning({ id: menuItems.id });
+  return removed.length;
 }
