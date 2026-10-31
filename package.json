@@ -18,7 +18,8 @@
     "predev": "node scripts/copy-map-worker.mjs",
     "build:static": "node scripts/copy-map-worker.mjs && STATIC_EXPORT=1 next build",
     "places:build": "tsx scripts/build-places.ts",
-    "menus:crawl": "tsx scripts/crawl-menus.ts"
+    "menus:crawl": "tsx scripts/crawl-menus.ts",
+    "validate": "tsx scripts/validate-estimator.ts"
   },
   "dependencies": {
     "@electric-sql/pglite": "^0.5.13",

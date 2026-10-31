@@ -1,5 +1,16 @@
 # Validating estimate accuracy
 
+> **Status: unvalidated.** The benchmark framework exists, but `data/validation/meals.json` contains no reference meals yet. No accuracy figures have been measured, and the app makes no accuracy claims.
+
+## Running the benchmark
+
+1. Add sourced reference meals to `data/validation/meals.json` (format in `data/validation/README.md`).
+2. Run `npm run validate`.
+   - It prints MAE, MAPE, bias, share within ±20 % and range coverage, per category and per split.
+   - It also writes `data/validation/results.json`.
+3. Tune assumptions (portion ranges in `src/lib/nutrition/archetypes.ts`, `MODEL_ERROR` in `estimate.ts`) only on the `calibration` split, and report the `holdout` split.
+4. When estimates change, update the regression snapshots in `tests/__snapshots__/regression.test.ts.snap` (`npx vitest -u`). Also bump `ESTIMATOR_VERSION` in `src/server/nutrition/service.ts`.
+
 MacroMap does **not** claim a fixed accuracy. To make any claim, measure it.
 
 ## Ground truth

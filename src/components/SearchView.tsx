@@ -1,10 +1,11 @@
 "use client";
 import Link from "next/link";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { Loader2, MapPin, Search, SlidersHorizontal } from "lucide-react";
 import { formatDistance } from "@/lib/geo";
 import { useLocation } from "@/lib/client/location";
 import { track } from "@/lib/client/loading";
+import { createLatestGuard } from "@/lib/client/latest";
 import { backend, type RestaurantHit, type SearchApiResponse } from "@/lib/client/backend";
 import { useHalal } from "@/lib/client/prefs";
 import { halalStatus, passesHalalFilter } from "@/lib/halal";
@@ -21,6 +22,9 @@ const EXAMPLES = ["40 g protein under 650 kcal within 3 km", "high protein sushi
 export function SearchView({ initialQuery = "" }: { initialQuery?: string }) {
   const { location, ready } = useLocation();
   const [q, setQ] = useState(initialQuery);
+  /** The query actually searched (the input box can differ while typing). */
+  const [query, setQuery] = useState(initialQuery);
+  const guard = useRef(createLatestGuard()).current;
   const [ov, setOv] = useState<Overrides>({});
   const [data, setData] = useState<SearchApiResponse | null>(null);
   const [loading, setLoading] = useState(false);
@@ -32,6 +36,7 @@ export function SearchView({ initialQuery = "" }: { initialQuery?: string }) {
 
   const run = useCallback(
     async (query: string, o: Overrides) => {
+      const token = guard.next();
       setLoading(true);
       setError(null);
       const p = new URLSearchParams({ q: query });
@@ -47,26 +52,29 @@ export function SearchView({ initialQuery = "" }: { initialQuery?: string }) {
           track(backend.search(p, reports)),
           query.trim().length >= 2 && location ? backend.searchRestaurants(query.trim(), location.lat, location.lng).catch(() => []) : Promise.resolve([]),
         ]);
+        // A newer search started while this one was running: drop this result.
+        if (!guard.isLatest(token)) return;
         setData(res);
         setRestaurantHits(res.filters.text ? hits.slice(0, 6) : []);
       } catch (e) {
-        setError((e as Error).message || "Search failed");
+        if (guard.isLatest(token)) setError((e as Error).message || "Search failed");
       } finally {
-        setLoading(false);
+        if (guard.isLatest(token)) setLoading(false);
       }
     },
-    [location, halalOnly, includePossible, reports],
+    [location, halalOnly, includePossible, reports, guard],
   );
 
+  // One search per change of query / filters / location — never duplicated by form submits.
   useEffect(() => {
-    if (ready) run(q, ov);
+    if (ready) run(query, ov);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [ready, location, ov, halalOnly, includePossible]);
+  }, [ready, location, query, ov, halalOnly, includePossible]);
 
   // Re-run once a slow live places lookup finishes on the server.
   useEffect(() => {
     if (!data?.pending) return;
-    const t = setTimeout(() => run(q, ov), 6000);
+    const t = setTimeout(() => run(query, ov), 6000);
     return () => clearTimeout(t);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [data]);
@@ -82,8 +90,8 @@ export function SearchView({ initialQuery = "" }: { initialQuery?: string }) {
       <form
         onSubmit={(e) => {
           e.preventDefault();
+          setQuery(q.trim());
           setOv({});
-          run(q, {});
         }}
         className="relative"
       >
@@ -94,7 +102,7 @@ export function SearchView({ initialQuery = "" }: { initialQuery?: string }) {
       {!q && (
         <div className="mt-2 flex gap-1.5 overflow-x-auto pb-1">
           {EXAMPLES.map((ex) => (
-            <button key={ex} onClick={() => { setQ(ex); setOv({}); run(ex, {}); }} className="whitespace-nowrap rounded-full border border-line px-3 py-1 text-xs text-ink-2 hover:text-ink">{ex}</button>
+            <button key={ex} onClick={() => { setQ(ex); setQuery(ex); setOv({}); }} className="whitespace-nowrap rounded-full border border-line px-3 py-1 text-xs text-ink-2 hover:text-ink">{ex}</button>
           ))}
         </div>
       )}
@@ -161,7 +169,12 @@ export function SearchView({ initialQuery = "" }: { initialQuery?: string }) {
         <p className="mt-3 flex items-center gap-1 text-xs text-ink-2"><MapPin size={13} />Searching around Oslo sentrum. <Link href="/" className="underline">Set your location</Link></p>
       )}
 
-      {error && <p className="mt-4 rounded-xl bg-warn-soft p-3 text-sm text-warn" role="alert">{error}</p>}
+      {error && (
+        <p className="mt-4 flex items-center justify-between gap-3 rounded-xl bg-warn-soft p-3 text-sm text-warn" role="alert">
+          <span>Search failed: {error}</span>
+          <button onClick={() => run(query, ov)} className="rounded-lg bg-surface px-3 py-1 text-xs font-medium text-ink">Try again</button>
+        </p>
+      )}
       {data?.pending && <p className="mt-3 flex items-center gap-2 text-xs text-ink-3"><Loader2 size={12} className="animate-spin" />Still loading live restaurant data for this area…</p>}
       {data?.liveError && <p className="mt-3 rounded-xl bg-warn-soft px-3 py-2 text-xs text-warn">{data.liveError}</p>}
 

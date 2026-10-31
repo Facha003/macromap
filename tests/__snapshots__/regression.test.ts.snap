@@ -1,0 +1,251 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`estimator regression > Brown sugar milk tea 1`] = `
+{
+  "carbs": [
+    66,
+    83,
+    105,
+  ],
+  "fat": [
+    2,
+    4,
+    5,
+  ],
+  "kcal": [
+    303,
+    378,
+    475,
+  ],
+  "protein": [
+    2,
+    4,
+    5,
+  ],
+}
+`;
+
+exports[`estimator regression > Brown sugar milk tea 2`] = `
+{
+  "carbs": [
+    53,
+    66,
+    82,
+  ],
+  "fat": [
+    1,
+    1,
+    1,
+  ],
+  "kcal": [
+    226,
+    280,
+    346,
+  ],
+  "protein": [
+    1,
+    1,
+    2,
+  ],
+}
+`;
+
+exports[`estimator regression > California roll (8 pcs) 1`] = `
+{
+  "carbs": [
+    30,
+    38,
+    50,
+  ],
+  "fat": [
+    3,
+    4,
+    5,
+  ],
+  "kcal": [
+    174,
+    224,
+    291,
+  ],
+  "protein": [
+    7,
+    8,
+    11,
+  ],
+}
+`;
+
+exports[`estimator regression > Cheeseburger 1`] = `
+{
+  "carbs": [
+    35,
+    43,
+    54,
+  ],
+  "fat": [
+    30,
+    38,
+    48,
+  ],
+  "kcal": [
+    579,
+    689,
+    835,
+  ],
+  "protein": [
+    35,
+    42,
+    53,
+  ],
+}
+`;
+
+exports[`estimator regression > Chicken kebab wrap 1`] = `
+{
+  "carbs": [
+    35,
+    46,
+    58,
+  ],
+  "fat": [
+    23,
+    29,
+    39,
+  ],
+  "kcal": [
+    504,
+    620,
+    766,
+  ],
+  "protein": [
+    32,
+    42,
+    54,
+  ],
+}
+`;
+
+exports[`estimator regression > Chicken tikka masala 1`] = `
+{
+  "carbs": [
+    43,
+    62,
+    83,
+  ],
+  "fat": [
+    28,
+    38,
+    54,
+  ],
+  "kcal": [
+    608,
+    769,
+    969,
+  ],
+  "protein": [
+    31,
+    43,
+    56,
+  ],
+}
+`;
+
+exports[`estimator regression > Kebab plate with rice 1`] = `
+{
+  "carbs": [
+    43,
+    61,
+    82,
+  ],
+  "fat": [
+    43,
+    56,
+    72,
+  ],
+  "kcal": [
+    750,
+    942,
+    1166,
+  ],
+  "protein": [
+    36,
+    46,
+    59,
+  ],
+}
+`;
+
+exports[`estimator regression > Laks med poteter 1`] = `
+{
+  "carbs": [
+    26,
+    37,
+    50,
+  ],
+  "fat": [
+    37,
+    53,
+    76,
+  ],
+  "kcal": [
+    619,
+    807,
+    1052,
+  ],
+  "protein": [
+    31,
+    42,
+    55,
+  ],
+}
+`;
+
+exports[`estimator regression > Salmon nigiri (8 pcs) 1`] = `
+{
+  "carbs": [
+    40,
+    54,
+    69,
+  ],
+  "fat": [
+    11,
+    15,
+    20,
+  ],
+  "kcal": [
+    349,
+    441,
+    545,
+  ],
+  "protein": [
+    17,
+    22,
+    29,
+  ],
+}
+`;
+
+exports[`estimator regression > Spaghetti carbonara 1`] = `
+{
+  "carbs": [
+    43,
+    61,
+    81,
+  ],
+  "fat": [
+    39,
+    50,
+    66,
+  ],
+  "kcal": [
+    673,
+    835,
+    1046,
+  ],
+  "protein": [
+    27,
+    34,
+    44,
+  ],
+}
+`;

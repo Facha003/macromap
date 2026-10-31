@@ -28,6 +28,7 @@ export function ExploreView() {
   const [data, setData] = useState<PlacesResponse | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [retry, setRetry] = useState(0);
   const [filter, setFilter] = useState("");
   const [onlyWithData, setOnlyWithData] = useState(false);
   const [shown, setShown] = useState(100);
@@ -77,7 +78,7 @@ export function ExploreView() {
       ctrl.abort();
       clearTimeout(timer);
     };
-  }, [location, radiusM]);
+  }, [location, radiusM, retry]);
 
   const statusOf = (r: { id: string; name: string; cuisines: string[]; halalTag?: string | null }) => halalStatus(r, reports[r.id]).status;
   const list = useMemo(() => {
@@ -172,7 +173,12 @@ export function ExploreView() {
         </div>
       )}
       {data?.liveError && <p className="mb-3 rounded-xl bg-warn-soft px-3 py-2 text-xs text-warn">{data.liveError}</p>}
-      {error && <p className="mb-3 rounded-xl bg-warn-soft px-3 py-2 text-sm text-warn" role="alert">{error}</p>}
+      {error && (
+        <p className="mb-3 flex items-center justify-between gap-3 rounded-xl bg-warn-soft px-3 py-2 text-sm text-warn" role="alert">
+          <span>{error}</span>
+          <button onClick={() => setRetry((n) => n + 1)} className="rounded-lg bg-surface px-3 py-1 text-xs font-medium text-ink">Try again</button>
+        </p>
+      )}
 
       {searching ? (
         <section aria-label="Restaurant search results">
